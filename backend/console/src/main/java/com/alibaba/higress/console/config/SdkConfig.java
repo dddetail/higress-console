@@ -51,7 +51,8 @@ public class SdkConfig {
     /**
      * Kubernetes配置文件路径
      */
-    @Value("${" + SystemConfigKey.KUBE_CONFIG_KEY + ":}")
+//    @Value("${" + SystemConfigKey.KUBE_CONFIG_KEY + ":}")
+    @Value("${higress-console.kube.config}")
     private String kubeConfig;
 
     /**

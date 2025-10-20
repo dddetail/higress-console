@@ -18,7 +18,6 @@ package com.alibaba.higress.console.context;
 // 这些类用于处理HTTP请求和响应
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 /**
  * HttpContext 类用于封装当前线程的HTTP请求和响应对象。
  * 使用ThreadLocal确保每个线程拥有独立的HttpContext实例，实现线程安全。

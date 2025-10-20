@@ -1,15 +1,3 @@
-/*
- * Copyright (c) 2022-2024 Alibaba Group Holding Ltd.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- */
 package com.alibaba.higress.sdk.service.kubernetes;
 
 import static com.alibaba.higress.sdk.service.kubernetes.KubernetesUtil.buildDomainLabelSelector;
@@ -88,55 +76,86 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+/**
+ * Kubernetes客户端服务类，提供对Kubernetes资源的CRUD操作
+ */
 @Slf4j
 public class KubernetesClientService {
 
+    // 能力检查尝试次数
     private static final int CAPABILITY_CHECK_ATTEMPTS = 5;
+    // 能力检查间隔时间(毫秒)
     private static final long CAPABILITY_CHECK_INTERVAL = 1000;
+    // 默认kubeconfig文件路径
     private static final String KUBE_CONFIG_DEFAULT_PATH =
         Paths.get(System.getProperty("user.home"), "/.kube/config").toString();
+    // Pod服务账户令牌文件路径
     private static final String POD_SERVICE_ACCOUNT_TOKEN_FILE_PATH =
         "/var/run/secrets/kubernetes.io/serviceaccount/token";
+    // 控制器访问令牌文件路径
     private static final String CONTROLLER_ACCESS_TOKEN_FILE_PATH = "/var/run/secrets/access-token/token";
+    // 默认标签选择器
     private static final String DEFAULT_LABEL_SELECTORS =
         buildLabelSelector(KubernetesConstants.Label.RESOURCE_DEFINER_KEY, Label.RESOURCE_DEFINER_VALUE);
 
+    // Kubernetes API客户端
     private ApiClient client;
 
+    // HTTP客户端
     private final OkHttpClient okHttpClient = new OkHttpClient();
 
+    // 是否为集群内模式
     private final Boolean inClusterMode;
 
+    // kubeconfig文件路径
     private final String kubeConfig;
 
+    // kubeconfig内容
     private final String kubeConfigContent;
 
+    // 控制器服务名称
     private final String controllerServiceName;
 
+    // 控制器命名空间
     private final String controllerNamespace;
 
+    // 控制器监听的Ingress类名
     private final String controllerWatchedIngressClassName;
 
+    // 控制器监听的命名空间
     private final String controllerWatchedNamespace;
 
+    // 控制器服务主机
     private final String controllerServiceHost;
 
+    // 控制器服务端口
     private final int controllerServicePort;
 
+    // 控制器JWT策略
     private final String controllerJwtPolicy;
 
+    // 控制器访问令牌
     private final String controllerAccessToken;
 
+    // Ingress监听谓词
     private final Predicate<V1Ingress> isIngressWatched;
 
+    // 默认Ingress类
     private final String defaultIngressClass;
 
+    // Ingress v1是否支持
     @Getter
     private boolean ingressV1Supported;
 
+    // 集群域名后缀
     @Getter
     private final String clusterDomainSuffix;
 
+    /**
+     * 构造函数，初始化Kubernetes客户端服务
+     * @param config Higress服务配置
+     * @throws IOException IO异常
+     */
     public KubernetesClientService(HigressServiceConfig config) throws IOException {
         validateConfig(config);
 
@@ -157,6 +176,7 @@ public class KubernetesClientService {
             HigressConstants.CONTROLLER_INGRESS_CLASS_NAME_DEFAULT);
         this.clusterDomainSuffix = config.getClusterDomainSuffix();
 
+        // 根据模式初始化客户端
         if (inClusterMode) {
             client = ClientBuilder.cluster().build();
             log.info("init KubernetesClientService with InCluster mode");
@@ -178,6 +198,9 @@ public class KubernetesClientService {
         initializeK8sCapabilities();
     }
 
+    /**
+     * 初始化Kubernetes能力
+     */
     private void initializeK8sCapabilities() {
         Exception lastException = null;
         for (int i = 0; i < CAPABILITY_CHECK_ATTEMPTS; i++) {
@@ -192,46 +215,89 @@ public class KubernetesClientService {
                 try {
                     Thread.sleep(CAPABILITY_CHECK_INTERVAL);
                 } catch (InterruptedException ex) {
-                    // Ignore
+                    // 忽略中断异常
                 }
             }
         }
         log.error("Failed to load NetworkingV1 API resources from K8s.", lastException);
-        // Ingress v1 API is supported since Kubernetes v1.19 released on 26 August 2020.
-        // If we cannot know whether it is supported for sure, we can just assume
-        // that it is supported.
+        // Ingress v1 API自Kubernetes v1.19(2020年8月26日发布)起支持
+        // 如果无法确定是否支持，我们假设它是支持的
         ingressV1Supported = true;
     }
 
+    /**
+     * 检查命名空间是否受保护
+     * @param namespace 命名空间名称
+     * @return 是否受保护
+     */
     public boolean isNamespaceProtected(String namespace) {
         return KubernetesConstants.KUBE_SYSTEM_NS.equals(namespace) || controllerNamespace.equals(namespace);
     }
 
+    /**
+     * 检查Kubernetes对象是否由控制台定义
+     * @param metadata Kubernetes对象
+     * @return 是否由控制台定义
+     */
     public boolean isDefinedByConsole(KubernetesObject metadata) {
         return isDefinedByConsole(metadata.getMetadata());
     }
 
+    /**
+     * 检查对象元数据是否由控制台定义
+     * @param metadata 对象元数据
+     * @return 是否由控制台定义
+     */
     public boolean isDefinedByConsole(V1ObjectMeta metadata) {
         return metadata != null && controllerNamespace.equals(metadata.getNamespace())
             && Label.RESOURCE_DEFINER_VALUE.equals(KubernetesUtil.getLabel(metadata, Label.RESOURCE_DEFINER_KEY));
     }
 
+    /**
+     * 从YAML字符串加载Kubernetes对象
+     * @param yaml YAML字符串
+     * @param clazz 对象类型
+     * @param <T> Kubernetes对象类型
+     * @return Kubernetes对象
+     */
     public <T extends KubernetesObject> T loadFromYaml(String yaml, Class<T> clazz) {
         return Yaml.getSnakeYaml(clazz).loadAs(yaml, clazz);
     }
 
+    /**
+     * 从JSON字符串加载Kubernetes对象
+     * @param json JSON字符串
+     * @param clazz 对象类型
+     * @param <T> Kubernetes对象类型
+     * @return Kubernetes对象
+     */
     public <T extends KubernetesObject> T loadFromJson(String json, Class<T> clazz) {
         return client.getJSON().deserialize(json, clazz);
     }
 
+    /**
+     * 将Kubernetes对象保存为YAML字符串
+     * @param obj Kubernetes对象
+     * @return YAML字符串
+     */
     public String saveToYaml(KubernetesObject obj) {
         return Yaml.getSnakeYaml(obj.getClass()).dumpAsMap(obj);
     }
 
+    /**
+     * 将Kubernetes对象保存为JSON字符串
+     * @param obj Kubernetes对象
+     * @return JSON字符串
+     */
     public String saveToJson(KubernetesObject obj) {
         return client.getJSON().serialize(obj);
     }
 
+    /**
+     * 获取网关服务列表
+     * @return 注册服务列表
+     * @throws IOException IO异常
+     */
     public List<RegistryzService> gatewayServiceList() throws IOException {
         Request request = buildControllerRequest("/debug/registryz");
         log.info("gatewayServiceList url {}", request.url());
@@ -251,6 +317,11 @@ public class KubernetesClientService {
         return null;
     }
 
+    /**
+     * 获取网关服务端点
+     * @return 服务端点映射
+     * @throws IOException IO异常
+     */
     public Map<String, Map<String, IstioEndpointShard>> gatewayServiceEndpoint() throws IOException {
         Request request = buildControllerRequest("/debug/endpointShardz");
         log.info("gatewayServiceEndpoint url {}", request.url());
@@ -270,10 +341,19 @@ public class KubernetesClientService {
         return null;
     }
 
+    /**
+     * 检查是否在集群内运行
+     * @return 是否在集群内
+     */
     private static boolean isInCluster() {
         return new File(POD_SERVICE_ACCOUNT_TOKEN_FILE_PATH).exists();
     }
 
+    /**
+     * 列出所有Ingress资源
+     * @return Ingress列表
+     * @throws ApiException API异常
+     */
     public List<V1Ingress> listAllIngresses() throws ApiException {
         List<V1Ingress> ingresses = new ArrayList<>();
         NetworkingV1Api apiInstance = new NetworkingV1Api(client);
@@ -294,6 +374,11 @@ public class KubernetesClientService {
         return sortKubernetesObjects(ingresses);
     }
 
+    /**
+     * 列出所有服务
+     * @return 服务列表
+     * @throws ApiException API异常
+     */
     public List<V1Service> listAllServiceList() throws ApiException {
         CoreV1Api coreV1Api = new CoreV1Api(client);
         V1ServiceList v1ServiceList =
@@ -309,6 +394,11 @@ public class KubernetesClientService {
         return sortKubernetesObjects(resultList);
     }
 
+    /**
+     * 列出所有端点
+     * @return 端点列表
+     * @throws ApiException API异常
+     */
     @SneakyThrows
     public List<V1Endpoints> listAllEndPointsList() {
         CoreV1Api coreV1Api = new CoreV1Api(client);
@@ -325,6 +415,11 @@ public class KubernetesClientService {
         return sortKubernetesObjects(resultList);
     }
 
+    /**
+     * 列出Ingress资源
+     * @return Ingress列表
+     * @throws ApiException API异常
+     */
     public List<V1Ingress> listIngress() throws ApiException {
         NetworkingV1Api apiInstance = new NetworkingV1Api(client);
         V1IngressList list = apiInstance.listNamespacedIngress(controllerNamespace, null, null, null, null,
@@ -337,6 +432,12 @@ public class KubernetesClientService {
         return sortKubernetesObjects(ingresses);
     }
 
+    /**
+     * 根据标签映射列出Ingress资源
+     * @param labelMap 标签映射
+     * @return Ingress列表
+     * @throws ApiException API异常
+     */
     public List<V1Ingress> listIngress(Map<String, String> labelMap) throws ApiException {
         NetworkingV1Api apiInstance = new NetworkingV1Api(client);
         String labelSelectors = null;
@@ -358,6 +459,12 @@ public class KubernetesClientService {
         return sortKubernetesObjects(ingresses);
     }
 
+    /**
+     * 根据域名列出Ingress资源
+     * @param domainName 域名
+     * @return Ingress列表
+     * @throws ApiException API异常
+     */
     public List<V1Ingress> listIngressByDomain(String domainName) throws ApiException {
         NetworkingV1Api apiInstance = new NetworkingV1Api(client);
         String labelSelectors = joinLabelSelectors(DEFAULT_LABEL_SELECTORS, buildDomainLabelSelector(domainName));
@@ -371,6 +478,12 @@ public class KubernetesClientService {
         return sortKubernetesObjects(ingresses);
     }
 
+    /**
+     * 读取Ingress资源
+     * @param name Ingress名称
+     * @return Ingress对象
+     * @throws ApiException API异常
+     */
     public V1Ingress readIngress(String name) throws ApiException {
         NetworkingV1Api apiInstance = new NetworkingV1Api(client);
         try {
@@ -383,6 +496,12 @@ public class KubernetesClientService {
         }
     }
 
+    /**
+     * 创建Ingress资源
+     * @param ingress Ingress对象
+     * @return 创建的Ingress对象
+     * @throws ApiException API异常
+     */
     public V1Ingress createIngress(V1Ingress ingress) throws ApiException {
         renderDefaultMetadata(ingress);
         fillDefaultIngressClass(ingress);
@@ -390,6 +509,12 @@ public class KubernetesClientService {
         return apiInstance.createNamespacedIngress(controllerNamespace, ingress, null, null, null, null);
     }
 
+    /**
+     * 替换Ingress资源
+     * @param ingress Ingress对象
+     * @return 替换后的Ingress对象
+     * @throws ApiException API异常
+     */
     public V1Ingress replaceIngress(V1Ingress ingress) throws ApiException {
         V1ObjectMeta metadata = ingress.getMetadata();
         if (metadata == null) {
@@ -402,6 +527,11 @@ public class KubernetesClientService {
             null);
     }
 
+    /**
+     * 删除Ingress资源
+     * @param name Ingress名称
+     * @throws ApiException API异常
+     */
     public void deleteIngress(String name) throws ApiException {
         NetworkingV1Api apiInstance = new NetworkingV1Api(client);
         V1Status status;
@@ -409,7 +539,7 @@ public class KubernetesClientService {
             status = apiInstance.deleteNamespacedIngress(name, controllerNamespace, null, null, null, null, null, null);
         } catch (ApiException ae) {
             if (ae.getCode() == HttpStatus.NOT_FOUND) {
-                // The Ingress to be deleted is already gone or never existed.
+                // 要删除的Ingress已经不存在
                 return;
             }
             throw ae;
@@ -417,10 +547,21 @@ public class KubernetesClientService {
         checkResponseStatus(status);
     }
 
+    /**
+     * 列出ConfigMap资源
+     * @return ConfigMap列表
+     * @throws ApiException API异常
+     */
     public List<V1ConfigMap> listConfigMap() throws ApiException {
         return listConfigMap(null);
     }
 
+    /**
+     * 根据标签选择器列出ConfigMap资源
+     * @param labelSelectors 标签选择器
+     * @return ConfigMap列表
+     * @throws ApiException API异常
+     */
     public List<V1ConfigMap> listConfigMap(Map<String, String> labelSelectors) throws ApiException {
         CoreV1Api coreV1Api = new CoreV1Api(client);
         String labelSelectorsStr = KubernetesUtil.joinLabelSelectors(DEFAULT_LABEL_SELECTORS,
@@ -430,12 +571,24 @@ public class KubernetesClientService {
         return sortKubernetesObjects(Optional.ofNullable(list.getItems()).orElse(Collections.emptyList()));
     }
 
+    /**
+     * 创建ConfigMap资源
+     * @param configMap ConfigMap对象
+     * @return 创建的ConfigMap对象
+     * @throws ApiException API异常
+     */
     public V1ConfigMap createConfigMap(V1ConfigMap configMap) throws ApiException {
         renderDefaultMetadata(configMap);
         CoreV1Api coreV1Api = new CoreV1Api(client);
         return coreV1Api.createNamespacedConfigMap(controllerNamespace, configMap, null, null, null, null);
     }
 
+    /**
+     * 读取ConfigMap资源
+     * @param name ConfigMap名称
+     * @return ConfigMap对象
+     * @throws ApiException API异常
+     */
     public V1ConfigMap readConfigMap(String name) throws ApiException {
         CoreV1Api coreV1Api = new CoreV1Api(client);
         try {
@@ -448,6 +601,11 @@ public class KubernetesClientService {
         }
     }
 
+    /**
+     * 删除ConfigMap资源
+     * @param name ConfigMap名称
+     * @throws ApiException API异常
+     */
     public void deleteConfigMap(String name) throws ApiException {
         CoreV1Api coreV1Api = new CoreV1Api(client);
         V1Status status;
@@ -455,7 +613,7 @@ public class KubernetesClientService {
             status = coreV1Api.deleteNamespacedConfigMap(name, controllerNamespace, null, null, null, null, null, null);
         } catch (ApiException ae) {
             if (ae.getCode() == HttpStatus.NOT_FOUND) {
-                // The ConfigMap to be deleted is already gone or never existed.
+                // 要删除的ConfigMap已经不存在
                 return;
             }
             throw ae;
@@ -463,6 +621,12 @@ public class KubernetesClientService {
         checkResponseStatus(status);
     }
 
+    /**
+     * 替换ConfigMap资源
+     * @param configMap ConfigMap对象
+     * @return 替换后的ConfigMap对象
+     * @throws ApiException API异常
+     */
     public V1ConfigMap replaceConfigMap(V1ConfigMap configMap) throws ApiException {
         V1ObjectMeta metadata = configMap.getMetadata();
         if (metadata == null) {
@@ -474,6 +638,12 @@ public class KubernetesClientService {
             null, null);
     }
 
+    /**
+     * 列出Secret资源
+     * @param type Secret类型
+     * @return Secret列表
+     * @throws ApiException API异常
+     */
     public List<V1Secret> listSecret(String type) throws ApiException {
         CoreV1Api coreV1Api = new CoreV1Api(client);
         String fieldSelectors = null;
@@ -485,6 +655,12 @@ public class KubernetesClientService {
         return sortKubernetesObjects(Optional.ofNullable(list.getItems()).orElse(Collections.emptyList()));
     }
 
+    /**
+     * 读取Secret资源
+     * @param name Secret名称
+     * @return Secret对象
+     * @throws ApiException API异常
+     */
     public V1Secret readSecret(String name) throws ApiException {
         CoreV1Api coreV1Api = new CoreV1Api(client);
         try {
@@ -497,12 +673,24 @@ public class KubernetesClientService {
         }
     }
 
+    /**
+     * 创建Secret资源
+     * @param secret Secret对象
+     * @return 创建的Secret对象
+     * @throws ApiException API异常
+     */
     public V1Secret createSecret(V1Secret secret) throws ApiException {
         renderDefaultMetadata(secret);
         CoreV1Api coreV1Api = new CoreV1Api(client);
         return coreV1Api.createNamespacedSecret(controllerNamespace, secret, null, null, null, null);
     }
 
+    /**
+     * 替换Secret资源
+     * @param secret Secret对象
+     * @return 替换后的Secret对象
+     * @throws ApiException API异常
+     */
     public V1Secret replaceSecret(V1Secret secret) throws ApiException {
         V1ObjectMeta metadata = secret.getMetadata();
         if (metadata == null) {
@@ -514,6 +702,11 @@ public class KubernetesClientService {
             null);
     }
 
+    /**
+     * 删除Secret资源
+     * @param name Secret名称
+     * @throws ApiException API异常
+     */
     public void deleteSecret(String name) throws ApiException {
         CoreV1Api coreV1Api = new CoreV1Api(client);
         V1Status status;
@@ -521,7 +714,7 @@ public class KubernetesClientService {
             status = coreV1Api.deleteNamespacedSecret(name, controllerNamespace, null, null, null, null, null, null);
         } catch (ApiException ae) {
             if (ae.getCode() == HttpStatus.NOT_FOUND) {
-                // The Secret to be deleted is already gone or never existed.
+                // 要删除的Secret已经不存在
                 return;
             }
             throw ae;
@@ -529,6 +722,10 @@ public class KubernetesClientService {
         checkResponseStatus(status);
     }
 
+    /**
+     * 列出McpBridge资源
+     * @return McpBridge列表
+     */
     public List<V1McpBridge> listMcpBridge() {
         CustomObjectsApi customObjectsApi = new CustomObjectsApi(client);
         try {
@@ -544,6 +741,12 @@ public class KubernetesClientService {
         }
     }
 
+    /**
+     * 创建McpBridge资源
+     * @param mcpBridge McpBridge对象
+     * @return 创建的McpBridge对象
+     * @throws ApiException API异常
+     */
     public V1McpBridge createMcpBridge(V1McpBridge mcpBridge) throws ApiException {
         CustomObjectsApi customObjectsApi = new CustomObjectsApi(client);
         Object response = customObjectsApi.createNamespacedCustomObject(V1McpBridge.API_GROUP, V1McpBridge.VERSION,
@@ -551,6 +754,12 @@ public class KubernetesClientService {
         return client.getJSON().deserialize(client.getJSON().serialize(response), V1McpBridge.class);
     }
 
+    /**
+     * 替换McpBridge资源
+     * @param mcpBridge McpBridge对象
+     * @return 替换后的McpBridge对象
+     * @throws ApiException API异常
+     */
     public V1McpBridge replaceMcpBridge(V1McpBridge mcpBridge) throws ApiException {
         V1ObjectMeta metadata = mcpBridge.getMetadata();
         if (metadata == null) {
@@ -563,12 +772,23 @@ public class KubernetesClientService {
         return client.getJSON().deserialize(client.getJSON().serialize(response), V1McpBridge.class);
     }
 
+    /**
+     * 删除McpBridge资源
+     * @param name McpBridge名称
+     * @throws ApiException API异常
+     */
     public void deleteMcpBridge(String name) throws ApiException {
         CustomObjectsApi customObjectsApi = new CustomObjectsApi(client);
         customObjectsApi.deleteNamespacedCustomObject(V1McpBridge.API_GROUP, V1McpBridge.VERSION, controllerNamespace,
             V1McpBridge.PLURAL, name, null, null, null, null, null);
     }
 
+    /**
+     * 读取McpBridge资源
+     * @param name McpBridge名称
+     * @return McpBridge对象
+     * @throws ApiException API异常
+     */
     public V1McpBridge readMcpBridge(String name) throws ApiException {
         CustomObjectsApi customObjectsApi = new CustomObjectsApi(client);
         try {
@@ -583,18 +803,44 @@ public class KubernetesClientService {
         }
     }
 
+    /**
+     * 列出WasmPlugin资源
+     * @return WasmPlugin列表
+     * @throws ApiException API异常
+     */
     public List<V1alpha1WasmPlugin> listWasmPlugin() throws ApiException {
         return listWasmPlugin(null, null, null);
     }
 
+    /**
+     * 根据名称列出WasmPlugin资源
+     * @param name 插件名称
+     * @return WasmPlugin列表
+     * @throws ApiException API异常
+     */
     public List<V1alpha1WasmPlugin> listWasmPlugin(String name) throws ApiException {
         return listWasmPlugin(name, null, null);
     }
 
+    /**
+     * 根据名称和版本列出WasmPlugin资源
+     * @param name 插件名称
+     * @param version 插件版本
+     * @return WasmPlugin列表
+     * @throws ApiException API异常
+     */
     public List<V1alpha1WasmPlugin> listWasmPlugin(String name, String version) throws ApiException {
         return listWasmPlugin(name, version, null);
     }
 
+    /**
+     * 根据名称、版本和内置标志列出WasmPlugin资源
+     * @param name 插件名称
+     * @param version 插件版本
+     * @param builtIn 是否为内置插件
+     * @return WasmPlugin列表
+     * @throws ApiException API异常
+     */
     public List<V1alpha1WasmPlugin> listWasmPlugin(String name, String version, Boolean builtIn) throws ApiException {
         List<String> labelSelectorItems = new ArrayList<>();
         labelSelectorItems.add(DEFAULT_LABEL_SELECTORS);
@@ -618,6 +864,12 @@ public class KubernetesClientService {
         return sortKubernetesObjects(list.getItems());
     }
 
+    /**
+     * 创建WasmPlugin资源
+     * @param plugin WasmPlugin对象
+     * @return 创建的WasmPlugin对象
+     * @throws ApiException API异常
+     */
     public V1alpha1WasmPlugin createWasmPlugin(V1alpha1WasmPlugin plugin) throws ApiException {
         CustomObjectsApi customObjectsApi = new CustomObjectsApi(client);
         renderDefaultMetadata(plugin);
@@ -626,6 +878,12 @@ public class KubernetesClientService {
         return client.getJSON().deserialize(client.getJSON().serialize(response), V1alpha1WasmPlugin.class);
     }
 
+    /**
+     * 替换WasmPlugin资源
+     * @param plugin WasmPlugin对象
+     * @return 替换后的WasmPlugin对象
+     * @throws ApiException API异常
+     */
     public V1alpha1WasmPlugin replaceWasmPlugin(V1alpha1WasmPlugin plugin) throws ApiException {
         V1ObjectMeta metadata = plugin.getMetadata();
         if (metadata == null) {
@@ -639,6 +897,11 @@ public class KubernetesClientService {
         return client.getJSON().deserialize(client.getJSON().serialize(response), V1alpha1WasmPlugin.class);
     }
 
+    /**
+     * 删除WasmPlugin资源
+     * @param name WasmPlugin名称
+     * @throws ApiException API异常
+     */
     public void deleteWasmPlugin(String name) throws ApiException {
         CustomObjectsApi customObjectsApi = new CustomObjectsApi(client);
         try {
@@ -651,6 +914,12 @@ public class KubernetesClientService {
         }
     }
 
+    /**
+     * 读取WasmPlugin资源
+     * @param name WasmPlugin名称
+     * @return WasmPlugin对象
+     * @throws ApiException API异常
+     */
     public V1alpha1WasmPlugin readWasmPlugin(String name) throws ApiException {
         CustomObjectsApi customObjectsApi = new CustomObjectsApi(client);
         try {
@@ -665,6 +934,12 @@ public class KubernetesClientService {
         }
     }
 
+    /**
+     * 创建EnvoyFilter资源
+     * @param filter EnvoyFilter对象
+     * @return 创建的EnvoyFilter对象
+     * @throws ApiException API异常
+     */
     public V1alpha3EnvoyFilter createEnvoyFilter(V1alpha3EnvoyFilter filter) throws ApiException {
         CustomObjectsApi customObjectsApi = new CustomObjectsApi(client);
         renderDefaultMetadata(filter);
@@ -673,6 +948,12 @@ public class KubernetesClientService {
         return client.getJSON().deserialize(client.getJSON().serialize(response), V1alpha3EnvoyFilter.class);
     }
 
+    /**
+     * 替换EnvoyFilter资源
+     * @param filter EnvoyFilter对象
+     * @return 替换后的EnvoyFilter对象
+     * @throws ApiException API异常
+     */
     public V1alpha3EnvoyFilter replaceEnvoyFilter(V1alpha3EnvoyFilter filter) throws ApiException {
         V1ObjectMeta metadata = filter.getMetadata();
         if (metadata == null) {
@@ -686,6 +967,11 @@ public class KubernetesClientService {
         return client.getJSON().deserialize(client.getJSON().serialize(response), V1alpha3EnvoyFilter.class);
     }
 
+    /**
+     * 删除EnvoyFilter资源
+     * @param name EnvoyFilter名称
+     * @throws ApiException API异常
+     */
     public void deleteEnvoyFilter(String name) throws ApiException {
         CustomObjectsApi customObjectsApi = new CustomObjectsApi(client);
         try {
@@ -698,6 +984,12 @@ public class KubernetesClientService {
         }
     }
 
+    /**
+     * 读取EnvoyFilter资源
+     * @param name EnvoyFilter名称
+     * @return EnvoyFilter对象
+     * @throws ApiException API异常
+     */
     public V1alpha3EnvoyFilter readEnvoyFilter(String name) throws ApiException {
         CustomObjectsApi customObjectsApi = new CustomObjectsApi(client);
         try {
@@ -712,10 +1004,20 @@ public class KubernetesClientService {
         }
     }
 
+    /**
+     * 检查响应状态
+     * @param status 响应状态
+     */
     private void checkResponseStatus(V1Status status) {
-        // TODO: Throw exception accordingly.
+        // TODO: 根据状态抛出相应异常
     }
 
+    /**
+     * 构建控制器请求
+     * @param path 请求路径
+     * @return 请求对象
+     * @throws IOException IO异常
+     */
     private Request buildControllerRequest(String path) throws IOException {
         String serviceHost = inClusterMode ? controllerServiceName + "." + controllerNamespace : controllerServiceHost;
         String url = "http://" + serviceHost + ":" + controllerServicePort + path;
@@ -730,6 +1032,11 @@ public class KubernetesClientService {
         return builder.build();
     }
 
+    /**
+     * 从文件读取令牌
+     * @return 令牌字符串
+     * @throws IOException IO异常
+     */
     private String readTokenFromFile() throws IOException {
         String fileName = CONTROLLER_ACCESS_TOKEN_FILE_PATH;
         if (KubernetesConstants.JwtPolicy.FIRST_PARTY_JWT.equals(controllerJwtPolicy)) {
@@ -738,6 +1045,10 @@ public class KubernetesClientService {
         return FileUtils.readFileToString(new File(fileName), Charset.defaultCharset());
     }
 
+    /**
+     * 渲染默认元数据
+     * @param object Kubernetes对象
+     */
     private void renderDefaultMetadata(KubernetesObject object) {
         KubernetesUtil.setLabel(object, Label.RESOURCE_DEFINER_KEY, Label.RESOURCE_DEFINER_VALUE);
         if (KubernetesUtil.isInternalResource(object)) {
@@ -746,12 +1057,20 @@ public class KubernetesClientService {
         }
     }
 
+    /**
+     * 保留被监听的Ingress
+     * @param ingresses Ingress列表
+     */
     private void retainWatchedIngress(List<V1Ingress> ingresses) {
         if (CollectionUtils.isNotEmpty(ingresses)) {
             ingresses.removeIf(i -> !isIngressWatched.test(i));
         }
     }
 
+    /**
+     * 填充默认Ingress类
+     * @param ingress Ingress对象
+     */
     private void fillDefaultIngressClass(V1Ingress ingress) {
         V1IngressSpec spec = Objects.requireNonNull(ingress.getSpec());
         if (StringUtils.isEmpty(spec.getIngressClassName())) {
@@ -759,6 +1078,11 @@ public class KubernetesClientService {
         }
     }
 
+    /**
+     * 构建Ingress监听谓词
+     * @param controllerWatchedIngressClassName 控制器监听的Ingress类名
+     * @return 谓词函数
+     */
     private static Predicate<V1Ingress> buildIsIngressWatchedPredicate(String controllerWatchedIngressClassName) {
         if (StringUtils.isEmpty(controllerWatchedIngressClassName)) {
             return ingress -> true;
@@ -773,6 +1097,11 @@ public class KubernetesClientService {
         return ingress -> controllerWatchedIngressClassName.equals(getIngressClassName(ingress));
     }
 
+    /**
+     * 获取Ingress类名
+     * @param ingress Ingress对象
+     * @return Ingress类名
+     */
     private static String getIngressClassName(V1Ingress ingress) {
         V1IngressSpec spec = ingress.getSpec();
         if (spec == null) {
@@ -781,6 +1110,12 @@ public class KubernetesClientService {
         return spec.getIngressClassName();
     }
 
+    /**
+     * 对Kubernetes对象进行排序
+     * @param objects Kubernetes对象列表
+     * @param <T> Kubernetes对象类型
+     * @return 排序后的对象列表
+     */
     private static <T extends KubernetesObject> List<T> sortKubernetesObjects(List<T> objects) {
         if (CollectionUtils.isNotEmpty(objects)) {
             objects.sort(Comparator.comparing(o -> o.getMetadata() != null ? o.getMetadata().getName() : null));
@@ -788,6 +1123,10 @@ public class KubernetesClientService {
         return objects;
     }
 
+    /**
+     * 验证配置
+     * @param config Higress服务配置
+     */
     private static void validateConfig(HigressServiceConfig config) {
         if (isInCluster()) {
             if (StringUtils.isEmpty(config.getControllerServiceName())) {

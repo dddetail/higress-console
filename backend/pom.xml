@@ -204,21 +204,21 @@
 					</dependency>
 				</dependencies>
 			</plugin>
-			<plugin>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<configuration>
-					<charset>UTF-8</charset>
-					<sourcepath>${delombok.output}</sourcepath>
-				</configuration>
-				<executions>
-					<execution>
-						<id>attach-javadocs</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+<!--			<plugin>-->
+<!--				<artifactId>maven-javadoc-plugin</artifactId>-->
+<!--				<configuration>-->
+<!--					<charset>UTF-8</charset>-->
+<!--					<sourcepath>${delombok.output}</sourcepath>-->
+<!--				</configuration>-->
+<!--				<executions>-->
+<!--					<execution>-->
+<!--						<id>attach-javadocs</id>-->
+<!--						<goals>-->
+<!--							<goal>jar</goal>-->
+<!--						</goals>-->
+<!--					</execution>-->
+<!--				</executions>-->
+<!--			</plugin>-->
 			<plugin>
 				<artifactId>maven-source-plugin</artifactId>
 				<executions>
@@ -357,31 +357,31 @@
 			</activation>
 			<build>
 				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-checkstyle-plugin</artifactId>
-						<version>${checkstyle-plugin.version}</version>
-						<executions>
-							<execution>
-								<id>validate</id>
-								<phase>compile</phase>
-								<configuration>
-									<configLocation>${session.executionRootDirectory}/style/higress_checkstyle.xml
-									</configLocation>
-									<suppressionsLocation>
-										${session.executionRootDirectory}/style/higress_suppressions.xml
-									</suppressionsLocation>
-									<inputEncoding>${plugin.inputEncoding}</inputEncoding>
-									<outputEncoding>${plugin.outputEncoding}</outputEncoding>
-									<consoleOutput>true</consoleOutput>
-									<failsOnError>true</failsOnError>
-								</configuration>
-								<goals>
-									<goal>checkstyle</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
+<!--					<plugin>-->
+<!--						<groupId>org.apache.maven.plugins</groupId>-->
+<!--						<artifactId>maven-checkstyle-plugin</artifactId>-->
+<!--						<version>${checkstyle-plugin.version}</version>-->
+<!--						<executions>-->
+<!--							<execution>-->
+<!--								<id>validate</id>-->
+<!--								<phase>compile</phase>-->
+<!--								<configuration>-->
+<!--									<configLocation>${session.executionRootDirectory}/style/higress_checkstyle.xml-->
+<!--									</configLocation>-->
+<!--									<suppressionsLocation>-->
+<!--										${session.executionRootDirectory}/style/higress_suppressions.xml-->
+<!--									</suppressionsLocation>-->
+<!--									<inputEncoding>${plugin.inputEncoding}</inputEncoding>-->
+<!--									<outputEncoding>${plugin.outputEncoding}</outputEncoding>-->
+<!--									<consoleOutput>true</consoleOutput>-->
+<!--									<failsOnError>true</failsOnError>-->
+<!--								</configuration>-->
+<!--								<goals>-->
+<!--									<goal>checkstyle</goal>-->
+<!--								</goals>-->
+<!--							</execution>-->
+<!--						</executions>-->
+<!--					</plugin>-->
 				</plugins>
 			</build>
 		</profile>

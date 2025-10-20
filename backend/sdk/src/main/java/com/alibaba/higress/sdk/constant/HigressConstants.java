@@ -38,13 +38,15 @@ public class HigressConstants {
      * 默认控制器服务主机地址
      * 控制器服务监听的默认主机地址
      */
-    public static final String CONTROLLER_SERVICE_HOST_DEFAULT = "localhost";
+//    public static final String CONTROLLER_SERVICE_HOST_DEFAULT = "localhost";
+    public static final String CONTROLLER_SERVICE_HOST_DEFAULT = "192.168.184.128";
 
     /**
      * 默认控制器服务端口
      * 控制器服务监听的默认端口号
      */
-    public static final int CONTROLLER_SERVICE_PORT_DEFAULT = 15014;
+//    public static final int CONTROLLER_SERVICE_PORT_DEFAULT = 15014;
+    public static final int CONTROLLER_SERVICE_PORT_DEFAULT = 31946;
 
     /**
      * 默认JWT策略

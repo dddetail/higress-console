@@ -19,7 +19,7 @@
     <!-- 项目属性配置 -->
     <properties>
         <!-- Node.js版本 -->
-        <nodejs.version>16.19.0</nodejs.version>
+        <nodejs.version>22.20.0</nodejs.version>
         <!-- SpringDoc OpenAPI Maven插件版本 -->
         <springdoc-openapi-maven-plugin.version>1.4</springdoc-openapi-maven-plugin.version>
 
@@ -134,51 +134,51 @@
                     <!-- 工作目录设置为前端项目目录 -->
                     <workingDirectory>../../frontend/</workingDirectory>
                 </configuration>
-                <executions>
-                    <!-- 安装Node.js和npm -->
-                    <execution>
-                        <id>install node and npm</id>
-                        <goals>
-                            <goal>install-node-and-npm</goal>
-                        </goals>
-                        <configuration>
-                            <nodeVersion>v${nodejs.version}</nodeVersion>
-                        </configuration>
-                    </execution>
+<!--                <executions>-->
+<!--                    &lt;!&ndash; 安装Node.js和npm &ndash;&gt;-->
+<!--                    <execution>-->
+<!--                        <id>install node and npm</id>-->
+<!--                        <goals>-->
+<!--                            <goal>install-node-and-npm</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <nodeVersion>v${nodejs.version}</nodeVersion>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
 
-                    <!-- 执行npm install -->
-                    <execution>
-                        <id>npm install</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <configuration>
-                            <arguments>install</arguments>
-                        </configuration>
-                    </execution>
+<!--                    &lt;!&ndash; 执行npm install &ndash;&gt;-->
+<!--                    <execution>-->
+<!--                        <id>npm install</id>-->
+<!--                        <goals>-->
+<!--                            <goal>npm</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <arguments>install</arguments>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
 
-                    <!-- 更新浏览器兼容性数据库 -->
-                    <execution>
-                        <id>update caniuse db</id>
-                        <goals>
-                            <goal>npx</goal>
-                        </goals>
-                        <configuration>
-                            <arguments>browserslist@latest --update-db</arguments>
-                        </configuration>
-                    </execution>
+<!--                    &lt;!&ndash; 更新浏览器兼容性数据库 &ndash;&gt;-->
+<!--                    <execution>-->
+<!--                        <id>update caniuse db</id>-->
+<!--                        <goals>-->
+<!--                            <goal>npx</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <arguments>browserslist@latest &#45;&#45;update-db</arguments>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
 
-                    <!-- 执行npm build构建前端项目 -->
-                    <execution>
-                        <id>npm build</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <configuration>
-                            <arguments>run build</arguments>
-                        </configuration>
-                    </execution>
-                </executions>
+<!--                    &lt;!&ndash; 执行npm build构建前端项目 &ndash;&gt;-->
+<!--                    <execution>-->
+<!--                        <id>npm build</id>-->
+<!--                        <goals>-->
+<!--                            <goal>npm</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <arguments>run build</arguments>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
             </plugin>
 
             <!-- Maven资源插件，用于复制资源文件 -->
@@ -278,22 +278,22 @@
                     </plugin>
 
                     <!-- SpringDoc OpenAPI Maven插件，用于生成OpenAPI文档 -->
-                    <plugin>
-                        <groupId>org.springdoc</groupId>
-                        <artifactId>springdoc-openapi-maven-plugin</artifactId>
-                        <version>${springdoc-openapi-maven-plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <id>integration-test</id>
-                                <goals>
-                                    <goal>generate</goal>
-                                </goals>
-                                <configuration>
-                                    <apiDocsUrl>http://localhost:8080/v3/api-docs/Higress</apiDocsUrl>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
+<!--                    <plugin>-->
+<!--                        <groupId>org.springdoc</groupId>-->
+<!--                        <artifactId>springdoc-openapi-maven-plugin</artifactId>-->
+<!--                        <version>${springdoc-openapi-maven-plugin.version}</version>-->
+<!--                        <executions>-->
+<!--                            <execution>-->
+<!--                                <id>integration-test</id>-->
+<!--                                <goals>-->
+<!--                                    <goal>generate</goal>-->
+<!--                                </goals>-->
+<!--                                <configuration>-->
+<!--                                    <apiDocsUrl>http://localhost:8080/v3/api-docs/Higress</apiDocsUrl>-->
+<!--                                </configuration>-->
+<!--                            </execution>-->
+<!--                        </executions>-->
+<!--                    </plugin>-->
                 </plugins>
             </build>
         </profile>
