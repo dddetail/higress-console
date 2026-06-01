@@ -140,12 +140,17 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 
 2. `/oauth2/callback/{provider}`：
    - 验证 `state` 参数
-   - 用 authorization code 向 Provider 换取 access_token
+   - 用 authorization code 向 Provider 换取 access_token 和 refresh_token
    - 用 access_token 调用 Provider 的 User Info API 获取用户信息
    - 根据 Provider + Provider 用户 ID 查找本地用户
-   - 用户存在：更新用户信息（如头像、显示名称），创建 Session
-   - 用户不存在：创建新用户记录，创建 Session（二期分配角色；一期默认无 Consumer 绑定）
+   - 用户存在：更新用户信息（如头像、显示名称），存储刷新后的 token，创建 Session
+   - 用户不存在：创建新用户记录，存储 OAuth2 token，创建 Session（一期默认无 Consumer 绑定）
    - 种下 Session Cookie，302 重定向到前端首页
+
+3. **Token 刷新**：
+   - 当 access_token 过期时，使用 refresh_token 向 Provider 自动刷新，更新存储
+   - 若 refresh_token 也失效，清除本地 token 记录，要求用户重新登录授权
+   - Token 刷新过程对用户透明
 
 #### 3.4 用户管理
 
@@ -229,8 +234,9 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
   - `HIGRESS_DB_URL`：JDBC URL
   - `HIGRESS_DB_USERNAME`：用户名
   - `HIGRESS_DB_PASSWORD`：密码
-- 应用启动时自动执行 DDL（通过 JPA `ddl-auto` 或 Flyway/Liquibase 迁移脚本）
+- 应用启动时自动执行 DDL（通过 Flyway 或 Liquibase 迁移脚本）
 - 现有的 K8s Secret 存储机制（admin 凭据、配置等）保持不变，新增的数据存入 MySQL
+- MySQL 为独立部署，不由 Higress Console Helm Chart 管理
 
 ---
 
@@ -323,6 +329,7 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 - **操作按钮控制**：只读角色（Reader）不展示"新建"、"编辑"、"删除"等操作按钮
 - **后端接口鉴权**：每个 API 请求在后端校验当前用户是否有权限执行该操作，无权限返回 403
 - **平台管理员不受限制**：平台管理员可以看到所有 Consumer 的所有资源
+- **未分配 Consumer 的用户**：SSO 用户首次登录且未被管理员分配到任何 Consumer 时，进入控制台后展示空白页 + 引导提示文案（如："您尚未被分配到任何应用，请联系平台管理员"）
 
 #### 3.10 初始化流程变更
 
@@ -345,6 +352,7 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 - Session Cookie 保持 `HttpOnly` 属性
 - 建议生产环境启用 HTTPS，OAuth2 回调 URL 必须为 HTTPS
 - 用户禁用后立即失效其 Session
+- 支持 refresh_token 自动刷新 access_token，刷新过程对用户透明
 
 ### 4.2 兼容性
 
@@ -354,7 +362,7 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 
 ### 4.3 可观测性
 
-- OAuth2 认证流程的关键步骤记录日志：授权发起、回调成功/失败、用户创建/匹配
+- OAuth2 认证流程的关键步骤记录日志：授权发起、回调成功/失败、用户创建/匹配、Token 刷新
 - 用户登录/登出事件记录日志，包含用户 ID、登录方式、来源 IP
 - OAuth2 Provider 调用失败时记录详细的错误信息（不含敏感 Token）
 
@@ -383,6 +391,7 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 | Consumer 详情 > 成员管理 | 新增 | Consumer 下的成员列表和角色管理 |
 | 全局导航 | 修改 | 根据用户角色动态过滤菜单 |
 | 资源列表页（路由/域名等） | 修改 | 根据用户角色控制可见资源和操作按钮 |
+| 空状态引导页 | 新增 | 未分配 Consumer 的用户看到的引导提示 |
 
 ---
 
@@ -422,10 +431,10 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 **目标**：用户可以通过 GitHub 等第三方 SSO 登录 Higress Console，管理员可以管理 OAuth2 配置和用户。
 
 **范围**：
-- 引入 MySQL + Spring Data JPA
+- 引入 MySQL（独立部署） + Spring Data JPA
 - OAuth2 Provider 配置管理（含预设模板）
 - 登录页面 SSO 入口
-- OAuth2 后端授权流程
+- OAuth2 后端授权流程（含 Token 刷新）
 - 用户管理（查看、禁用、删除）
 - Session 机制扩展
 - SSO 登录的用户一期暂不区分角色，登录后拥有与当前 admin 相同的全部权限
@@ -446,13 +455,14 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 - 前端导航和菜单动态过滤
 - 后端接口权限校验
 - 资源数据范围隔离
+- 未分配用户的空状态引导页
 - 初始化流程适配
 
 ---
 
-## 八、待确认事项
+## 八、约束与假设
 
-1. **OAuth2 Token 是否需要刷新**：access_token 通常有有效期，是否需要支持 refresh_token 自动刷新？还是每次登录重新授权？
-2. **用户与 Consumer 的默认关联**：SSO 用户首次登录且未被管理员分配到任何 Consumer 时，应该看到什么？空白页还是有引导提示？
-3. **多 OAuth2 账号绑定**：一个本地用户是否可以绑定多个 OAuth2 Provider（如同时绑定 GitHub 和 GitLab）？还是一对一绑定？
-4. **数据库部署方式**：MySQL 是独立部署还是作为 Higress Console 的组件一起部署（如 Helm Chart 中包含 MySQL）？
+1. **单一 Provider 部署**：实际生产环境中通常只配置一套 OAuth2 Provider，系统设计支持多 Provider 但不以此为主要场景
+2. **MySQL 独立部署**：MySQL 不由 Higress Console 的 Helm Chart 管理，需用户自行部署和维护
+3. **每个用户绑定一个 OAuth2 Provider**：系统支持多 Provider 配置，但单个用户通常只通过一个 Provider 登录
+4. **环境变量控制 SSO 开关**：SSO 功能通过环境变量 `HIGRESS_CONSOLE_SSO_ENABLED` 全局控制，未启用时系统行为与现有版本完全一致
