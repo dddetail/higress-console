@@ -22,7 +22,8 @@
     "pluginManagement": "Plugin Management",
     "systemSettings": "System Settings",
     "mcpManagement": "MCP Management",
-    "mcpConfigurations": "MCP Configurations"
+    "mcpConfigurations": "MCP Configurations",
+    "userManagement": "User Management"
   },
   "index": {
     "title": "Higress Console"

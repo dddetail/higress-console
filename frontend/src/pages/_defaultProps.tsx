@@ -6,6 +6,7 @@ import {
   RobotOutlined,
   SafetyCertificateOutlined,
   SettingOutlined,
+  TeamOutlined,
   UnorderedListOutlined,
   UserOutlined,
   WindowsOutlined,
@@ -102,6 +103,11 @@ export default {
         name: 'menu.consumerManagement',
         path: '/consumer',
         icon: <UserOutlined />,
+      },
+      {
+        name: 'menu.userManagement',
+        path: '/user/list',
+        icon: <TeamOutlined />,
       },
       {
         name: 'menu.pluginManagement',
