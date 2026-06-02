@@ -35,4 +35,15 @@ public interface SessionService {
     User validateSession(HttpServletRequest request);
 
     void changePassword(String username, String oldPassword, String newPassword);
+
+    /**
+     * Save session for an OAuth2-authenticated user.
+     */
+    void saveOauth2Session(HttpServletResponse response, User user);
+
+    /**
+     * Validate an OAuth2 session from the request cookie.
+     * Returns null if the cookie does not represent an OAuth2 session.
+     */
+    User validateOauth2Session(HttpServletRequest request);
 }

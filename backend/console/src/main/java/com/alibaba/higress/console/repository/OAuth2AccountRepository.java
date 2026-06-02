@@ -17,11 +17,11 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.alibaba.higress.console.repository.entity.OAuth2AccountEntity;
+import com.alibaba.higress.console.repository.entity.Oauth2AccountEntity;
 
-public interface OAuth2AccountRepository extends JpaRepository<OAuth2AccountEntity, Long> {
+public interface Oauth2AccountRepository extends JpaRepository<Oauth2AccountEntity, Long> {
 
-    Optional<OAuth2AccountEntity> findByProviderAndProviderUserId(String provider, String providerUserId);
+    Optional<Oauth2AccountEntity> findByProviderAndProviderUserId(String provider, String providerUserId);
 
-    List<OAuth2AccountEntity> findByUsername(String username);
+    List<Oauth2AccountEntity> findByUsername(String username);
 }

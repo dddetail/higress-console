@@ -27,4 +27,7 @@ public class User {
     private String password;
     private String displayName;
     private String avatarUrl;
+    private String employeeId;
+    private String type;
+    private String status;
 }

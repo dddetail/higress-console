@@ -17,13 +17,13 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.alibaba.higress.console.repository.entity.OAuth2ProviderEntity;
+import com.alibaba.higress.console.repository.entity.Oauth2ProviderEntity;
 
-public interface OAuth2ProviderRepository extends JpaRepository<OAuth2ProviderEntity, Long> {
+public interface Oauth2ProviderRepository extends JpaRepository<Oauth2ProviderEntity, Long> {
 
-    Optional<OAuth2ProviderEntity> findByProviderKey(String providerKey);
+    Optional<Oauth2ProviderEntity> findByProviderKey(String providerKey);
 
-    List<OAuth2ProviderEntity> findByEnabledTrue();
+    List<Oauth2ProviderEntity> findByEnabledTrue();
 
     boolean existsByProviderKey(String providerKey);
 }

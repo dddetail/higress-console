@@ -62,6 +62,7 @@ public class SessionServiceImpl implements SessionService {
     private static final String ENCRYPT_IV_KEY = "iv";
     private static final int ENCRYPT_IV_LENGTH = 16;
     private static final String TOKEN_PART_SEPARATOR = "\1";
+    private static final String OAUTH2_TOKEN_PREFIX = "oauth2:";
 
     @Value("${" + SystemConfigKey.ADMIN_COOKIE_NAME_KEY + ":" + SystemConfigKey.ADMIN_COOKIE_NAME_DEFAULT + "}")
     private String cookieName = SystemConfigKey.ADMIN_COOKIE_NAME_DEFAULT;
@@ -175,10 +176,23 @@ public class SessionServiceImpl implements SessionService {
         if (user != null) {
             return user;
         }
-        return tryExtractUserFromAuthHeader(request);
+        user = tryExtractUserFromAuthHeader(request);
+        if (user != null) {
+            return user;
+        }
+        return validateOauth2Session(request);
     }
 
-    private User tryExtractUserFromCookie(HttpServletRequest request) {
+    @Override
+    public void saveOauth2Session(HttpServletResponse response, User user) {
+        Cookie cookie = buildEmptyCookie();
+        cookie.setValue(generateOauth2Token(user));
+        cookie.setMaxAge(cookieMaxAge);
+        response.addCookie(cookie);
+    }
+
+    @Override
+    public User validateOauth2Session(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null || cookies.length == 0) {
             return null;
@@ -198,43 +212,21 @@ public class SessionServiceImpl implements SessionService {
         try {
             rawToken = AesUtil.decrypt(config.getEncryptKey(), config.getEncryptIv(), token);
         } catch (GeneralSecurityException e) {
-            log.warn("Error occurs when decrypting token: " + token, e);
+            log.warn("Error occurs when decrypting OAuth2 token: " + token, e);
             return null;
         }
 
+        if (!rawToken.startsWith(OAUTH2_TOKEN_PREFIX)) {
+            return null;
+        }
+
+        // oauth2:username:timestamp
         String[] segments = rawToken.split(TOKEN_PART_SEPARATOR);
         if (segments.length < 3) {
             return null;
         }
-        return validateCredential(segments[0], segments[1]);
-    }
-
-    private User tryExtractUserFromAuthHeader(HttpServletRequest request) {
-        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (StringUtils.isBlank(header)) {
-            return null;
-        }
-        String[] parts = header.split(" ");
-        if (parts.length != 2 || !"Basic".equals(parts[0])) {
-            return null;
-        }
-        String decoded = new String(Base64.getDecoder().decode(parts[1]));
-        String[] credentials = decoded.split(":");
-        if (credentials.length != 2) {
-            return null;
-        }
-        return validateCredential(credentials[0], credentials[1]);
-    }
-
-    private User validateCredential(String username, String password) {
-        AdminConfig config = tryGetAdminConfig();
-        if (config == null) {
-            return null;
-        }
-        if (!config.getUsername().equals(username) || !config.getPassword().equals(password)) {
-            return null;
-        }
-        return config.toUser();
+        String username = segments[1];
+        return User.builder().name(username).type("consumer_user").status("active").build();
     }
 
     @Override
@@ -296,6 +288,81 @@ public class SessionServiceImpl implements SessionService {
         }
     }
 
+    private String generateOauth2Token(User user) {
+        AdminConfig config = getAdminConfig();
+        String rawToken = OAUTH2_TOKEN_PREFIX + user.getName() + TOKEN_PART_SEPARATOR
+            + String.valueOf(System.currentTimeMillis());
+        try {
+            return AesUtil.encrypt(config.getEncryptKey(), config.getEncryptIv(), rawToken);
+        } catch (GeneralSecurityException e) {
+            throw new BusinessException("Error occurs when generating OAuth2 token for user " + user.getName(), e);
+        }
+    }
+
+    private User tryExtractUserFromCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null || cookies.length == 0) {
+            return null;
+        }
+        String token = Arrays.stream(cookies).filter(c -> cookieName.equals(c.getName())).map(Cookie::getValue)
+            .findFirst().orElse(null);
+        if (Strings.isNullOrEmpty(token)) {
+            return null;
+        }
+
+        AdminConfig config = tryGetAdminConfig();
+        if (config == null) {
+            return null;
+        }
+
+        String rawToken;
+        try {
+            rawToken = AesUtil.decrypt(config.getEncryptKey(), config.getEncryptIv(), token);
+        } catch (GeneralSecurityException e) {
+            log.warn("Error occurs when decrypting token: " + token, e);
+            return null;
+        }
+
+        // Skip OAuth2 tokens in the legacy cookie path
+        if (rawToken.startsWith(OAUTH2_TOKEN_PREFIX)) {
+            return null;
+        }
+
+        String[] segments = rawToken.split(TOKEN_PART_SEPARATOR);
+        if (segments.length < 3) {
+            return null;
+        }
+        return validateCredential(segments[0], segments[1]);
+    }
+
+    private User tryExtractUserFromAuthHeader(HttpServletRequest request) {
+        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (StringUtils.isBlank(header)) {
+            return null;
+        }
+        String[] parts = header.split(" ");
+        if (parts.length != 2 || !"Basic".equals(parts[0])) {
+            return null;
+        }
+        String decoded = new String(Base64.getDecoder().decode(parts[1]));
+        String[] credentials = decoded.split(":");
+        if (credentials.length != 2) {
+            return null;
+        }
+        return validateCredential(credentials[0], credentials[1]);
+    }
+
+    private User validateCredential(String username, String password) {
+        AdminConfig config = tryGetAdminConfig();
+        if (config == null) {
+            return null;
+        }
+        if (!config.getUsername().equals(username) || !config.getPassword().equals(password)) {
+            return null;
+        }
+        return config.toUser();
+    }
+
     private AdminConfig getAdminConfig() {
         AdminConfig config = tryGetAdminConfig();
         if (config == null) {
@@ -333,8 +400,6 @@ public class SessionServiceImpl implements SessionService {
         AdminConfig adminConfig = AdminConfig.builder().username(getString(data, USERNAME_KEY))
             .displayName(getString(data, DISPLAY_NAME_KEY)).password(getString(data, PASSWORD_KEY))
             .encryptKey(getString(data, ENCRYPT_KEY_KEY)).encryptIv(getString(data, ENCRYPT_IV_KEY)).build();
-        // AdminConfig adminConfig = AdminConfig.builder().name("admin").displayName("Admin").password("123456")
-        // .encryptKey("").encryptIv("").build();
         return adminConfig.isValid() ? adminConfig : null;
     }
 

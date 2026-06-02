@@ -32,7 +32,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Table(name = "oauth2_provider")
-public class OAuth2ProviderEntity {
+public class Oauth2ProviderEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
