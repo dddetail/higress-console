@@ -1,6 +1,7 @@
 export const SYSTEM_INITIALIZED = 'system.initialized';
 export const LOGIN_PROMPT = 'login.prompt';
 export const INDEX_REDIRECT_TARGET = 'index.redirect-target';
+export const SSO_ENABLED = 'sso.enabled';
 
 export const MODE = 'mode';
 

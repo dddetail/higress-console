@@ -3,6 +3,7 @@ export interface UserInfo {
   displayName: string;
   type?: 'user' | 'admin' | 'guest';
   avatarUrl?: string;
+  employeeId?: string;
 }
 
 export interface LoginParams {
@@ -13,4 +14,27 @@ export interface LoginParams {
 export interface ChangePasswordParams {
   oldPassword: string;
   newPassword: string;
+}
+
+export interface Oauth2Provider {
+  id: number;
+  name: string;
+  providerKey: string;
+  authorizationUrl: string;
+  tokenUrl: string;
+  userInfoUrl: string;
+  scope: string;
+  clientId: string;
+  clientSecret: string;
+  iconUrl: string;
+  enabled: boolean;
+  isPreset: boolean;
+}
+
+export interface UserListItem {
+  name: string;
+  displayName: string;
+  employeeId?: string;
+  type: string;
+  status: string;
 }

@@ -16,3 +16,19 @@ export async function fetchUserInfo(): Promise<UserInfo> {
 export async function changePassword(data: ChangePasswordParams): Promise<any> {
   return await request.post('/user/changePassword', data);
 }
+
+export async function listUsers(): Promise<any> {
+  return await request.get('/user/list');
+}
+
+export async function getUserDetail(username: string): Promise<any> {
+  return await request.get(`/user/${username}`);
+}
+
+export async function updateUserStatus(username: string, status: string): Promise<any> {
+  return await request.put(`/user/${username}/status`, { status });
+}
+
+export async function deleteUser(username: string): Promise<any> {
+  return await request.delete(`/user/${username}`);
+}
