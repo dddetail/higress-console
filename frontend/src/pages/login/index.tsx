@@ -1,12 +1,13 @@
 import logo from '@/assets/logo.png';
 import LanguageDropdown from '@/components/LanguageDropdown';
 import { LOGIN_PROMPT, SYSTEM_INITIALIZED } from '@/interfaces/config';
-import type { LoginParams, UserInfo } from '@/interfaces/user';
+import type { LoginParams, UserInfo, Oauth2Provider } from '@/interfaces/user';
 import { login } from '@/services';
+import { getEnabledProviders } from '@/services/oauth2';
 import store from '@/store';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { LoginForm, ProFormCheckbox, ProFormText } from '@ant-design/pro-form';
-import { Alert, message } from 'antd';
+import { Alert, Button, Divider, message, Space } from 'antd';
 import { history, useAuth, useNavigate } from 'ice';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +17,8 @@ const Login: React.FC = () => {
   const { t } = useTranslation();
 
   const [loginPrompt, setLoginPrompt] = useState<string>();
+  const [ssoProviders, setSsoProviders] = useState<Oauth2Provider[]>([]);
+  const [oauthError, setOauthError] = useState<string>();
   const [, userDispatcher] = store.useModel('user');
   const [configModel] = store.useModel('config');
   const [, setAuth] = useAuth();
@@ -28,6 +31,25 @@ const Login: React.FC = () => {
       return;
     }
     setLoginPrompt(properties[LOGIN_PROMPT]);
+
+    // Check for OAuth error from callback redirect
+    const urlParams = new URL(window.location.href).searchParams;
+    const error = urlParams.get('oauth_error');
+    if (error) {
+      setOauthError(decodeURIComponent(error));
+      window.history.replaceState({}, '', '/login');
+    }
+
+    // Load enabled SSO providers
+    getEnabledProviders()
+      .then((providers) => {
+        if (providers && providers.length > 0) {
+          setSsoProviders(providers);
+        }
+      })
+      .catch(() => {
+        // SSO not configured, ignore
+      });
   }, [configModel]);
 
   async function updateUserInfo(user: UserInfo) {
@@ -56,6 +78,11 @@ const Login: React.FC = () => {
       message.error(t('login.loginFailed'));
     }
   }
+
+  function handleSsoLogin(providerKey: string) {
+    window.location.href = `/api/oauth2/authorization/${providerKey}`;
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles['language-dropdown']}>
@@ -68,13 +95,11 @@ const Login: React.FC = () => {
         onFinish={async (values) => {
           await handleSubmit(values as LoginParams);
         }}
-        submitter={
-          {
-            searchConfig: {
-              submitText: t('login.buttonText'),
-            },
-          }
-        }
+        submitter={{
+          searchConfig: {
+            submitText: t('login.buttonText'),
+          },
+        }}
       >
         <ProFormText
           name="username"
@@ -132,6 +157,42 @@ const Login: React.FC = () => {
           </a>
         </div>
       </LoginForm>
+
+      {oauthError && (
+        <Alert
+          type="error"
+          message={oauthError}
+          style={{ maxWidth: 328, margin: '0 auto 16px' }}
+          closable
+          onClose={() => setOauthError(undefined)}
+        />
+      )}
+
+      {ssoProviders.length > 0 && (
+        <>
+          <Divider style={{ maxWidth: 328, margin: '16px auto' }}>
+            {t('sso.orDivider')}
+          </Divider>
+          <div className={styles['sso-buttons']}>
+            <p className={styles['sso-label']}>{t('sso.ssoLogin')}</p>
+            <Space direction="vertical" style={{ width: '100%', maxWidth: 328 }}>
+              {ssoProviders.map((provider) => (
+                <Button
+                  key={provider.providerKey}
+                  block
+                  size="large"
+                  onClick={() => handleSsoLogin(provider.providerKey)}
+                  icon={provider.iconUrl ? (
+                    <img src={provider.iconUrl} alt={provider.name} style={{ width: 18, height: 18 }} />
+                  ) : undefined}
+                >
+                  {t('sso.loginWith', { name: provider.name })}
+                </Button>
+              ))}
+            </Space>
+          </div>
+        </>
+      )}
     </div>
   );
 };
