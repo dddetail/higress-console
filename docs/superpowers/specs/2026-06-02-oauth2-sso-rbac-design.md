@@ -81,7 +81,7 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 - 保留现有的用户名/密码登录表单，功能不变
 - 在登录表单下方增加分隔线，分隔线下方展示已配置的 OAuth2 Provider 登录按钮
 - 每个 Provider 展示为独立按钮，包含 Provider 图标（如 GitHub logo）和名称
-- 未配置任何 OAuth2 Provider 时，SSO 登录区域不展示
+- 未配置任何 OAuth2 Provider 或 SSO 功能未启用时，SSO 登录区域不展示
 - 支持国际化（中英文）
 
 **交互流程**：
@@ -114,10 +114,15 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 - 配置即时生效，无需重启服务
 - Client Secret 等敏感信息加密存储，管理界面中脱敏显示
 
-**部署层面配置**：
+**SSO 功能开关**：
 
-- 通过环境变量 `HIGRESS_CONSOLE_SSO_ENABLED=true/false` 控制是否启用 SSO 功能
-- 未启用时，控制台不展示任何 SSO 相关 UI，后端不暴露 OAuth2 端点
+- SSO 功能的启用/禁用在"系统设置 > SSO 配置"页面中控制，无需通过环境变量或重启服务
+- 管理员在 SSO 配置页面中看到一个全局开关，关闭后：
+  - 登录页不展示 SSO 登录按钮区域
+  - 后端 `/oauth2/` 相关端点返回 404 或拒绝服务
+  - 已有的 OAuth2 Provider 配置数据保留，不删除
+- 启用 SSO 功能需要至少配置一个已启用的 OAuth2 Provider，否则提示管理员先完成配置
+- 开关状态变更即时生效
 
 #### 3.3 OAuth2 后端接口
 
@@ -134,6 +139,7 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 **处理逻辑**：
 
 1. `/oauth2/authorization/{provider}`：
+   - 检查 SSO 功能是否已启用，未启用则拒绝请求
    - 生成随机 `state` 参数，存入缓存（防 CSRF）
    - 构建 Provider 的授权 URL（含 Client ID、Redirect URI、Scope、State）
    - 302 重定向到 Provider 授权页
@@ -237,6 +243,7 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 - 应用启动时自动执行 DDL（通过 Flyway 或 Liquibase 迁移脚本）
 - 现有的 K8s Secret 存储机制（admin 凭据、配置等）保持不变，新增的数据存入 MySQL
 - MySQL 为独立部署，不由 Higress Console Helm Chart 管理
+- SSO 功能开关状态存储在数据库中（如存入系统配置表），而非环境变量
 
 ---
 
@@ -368,7 +375,7 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 
 ### 4.4 性能
 
-- OAuth2 Provider 配置支持缓存，避免每次授权请求都查数据库
+- OAuth2 Provider 配置和 SSO 开关状态支持缓存，避免每次授权请求都查数据库
 - 用户 Session 验证性能不因新增 OAuth2 分支而显著下降
 
 ---
@@ -380,7 +387,7 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 | 页面 | 类型 | 说明 |
 |------|------|------|
 | 登录页 | 修改 | 新增 SSO 登录按钮区域 |
-| 系统设置 > SSO 配置 | 新增 | OAuth2 Provider 的增删改查管理页 |
+| 系统设置 > SSO 配置 | 新增 | SSO 功能全局开关 + OAuth2 Provider 的增删改查管理页 |
 | 用户管理列表 | 新增 | 展示所有用户，支持搜索和状态管理 |
 | 用户详情页 | 新增 | 展示用户基本信息和 OAuth2 绑定信息 |
 
@@ -412,6 +419,8 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 | POST | `/v1/oauth2-providers` | 新增 OAuth2 Provider（管理员） |
 | PUT | `/v1/oauth2-providers/{id}` | 更新 OAuth2 Provider（管理员） |
 | DELETE | `/v1/oauth2-providers/{id}` | 删除 OAuth2 Provider（管理员） |
+| GET | `/v1/system/sso-status` | 获取 SSO 功能开关状态 |
+| PUT | `/v1/system/sso-status` | 切换 SSO 功能开关（管理员） |
 
 ### 二期新增
 
@@ -432,6 +441,7 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 
 **范围**：
 - 引入 MySQL（独立部署） + Spring Data JPA
+- SSO 功能全局开关（页面配置，即时生效）
 - OAuth2 Provider 配置管理（含预设模板）
 - 登录页面 SSO 入口
 - OAuth2 后端授权流程（含 Token 刷新）
@@ -465,4 +475,4 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 1. **单一 Provider 部署**：实际生产环境中通常只配置一套 OAuth2 Provider，系统设计支持多 Provider 但不以此为主要场景
 2. **MySQL 独立部署**：MySQL 不由 Higress Console 的 Helm Chart 管理，需用户自行部署和维护
 3. **每个用户绑定一个 OAuth2 Provider**：系统支持多 Provider 配置，但单个用户通常只通过一个 Provider 登录
-4. **环境变量控制 SSO 开关**：SSO 功能通过环境变量 `HIGRESS_CONSOLE_SSO_ENABLED` 全局控制，未启用时系统行为与现有版本完全一致
+4. **SSO 开关由页面控制**：SSO 功能的启用/禁用在管理页面操作，配置存入数据库，无需重启服务或修改环境变量
