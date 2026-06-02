@@ -180,7 +180,7 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | BIGINT (PK) | 记录 ID |
-| user_id | BIGINT (FK) | 关联 User.id |
+| username | VARCHAR(64) | 关联 User.username |
 | provider | VARCHAR(32) | Provider 标识，如 `github`、`gitlab` |
 | provider_user_id | VARCHAR(128) | Provider 侧的用户 ID |
 | provider_username | VARCHAR(64) | Provider 侧的用户名 |
@@ -259,12 +259,12 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 |------|------|------|
 | id | BIGINT (PK) | 记录 ID |
 | consumer_name | VARCHAR(64) | Consumer 名称（关联现有 Consumer） |
-| user_id | BIGINT (FK) | 关联 User.id |
+| username | VARCHAR(64) | 关联 User.username |
 | role | VARCHAR(16) | 角色：`owner` / `manager` / `reader` |
 | created_at | DATETIME | 加入时间 |
 | updated_at | DATETIME | 更新时间 |
 
-> 联合唯一索引：(consumer_name, user_id)
+> 联合唯一索引：(consumer_name, username)
 
 **管理界面功能**：
 
@@ -428,8 +428,8 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 |------|------|------|
 | GET | `/v1/consumers/{name}/members` | Consumer 成员列表 |
 | POST | `/v1/consumers/{name}/members` | 添加成员并分配角色 |
-| PUT | `/v1/consumers/{name}/members/{userId}` | 变更成员角色 |
-| DELETE | `/v1/consumers/{name}/members/{userId}` | 移除成员 |
+| PUT | `/v1/consumers/{name}/members/{username}` | 变更成员角色 |
+| DELETE | `/v1/consumers/{name}/members/{username}` | 移除成员 |
 
 ---
 
