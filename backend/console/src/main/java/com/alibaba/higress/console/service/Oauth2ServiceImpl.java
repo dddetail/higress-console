@@ -106,6 +106,7 @@ public class Oauth2ServiceImpl implements Oauth2Service {
 
         // Generate a local username based on provider
         String localUsername = providerKey + "_" + providerUserId;
+        LocalDateTime now = LocalDateTime.now();
 
         // Find or create local user
         UserEntity userEntity = userRepository.findByUsername(localUsername).orElse(null);
@@ -115,12 +116,15 @@ public class Oauth2ServiceImpl implements Oauth2Service {
                 .displayName(displayName != null ? displayName : providerUsername)
                 .type("consumer_user")
                 .status("active")
+                .createdAt(now)
+                .updatedAt(now)
                 .build();
             userEntity = userRepository.save(userEntity);
             log.info("Created new OAuth2 user: {} via provider: {}", localUsername, providerKey);
         } else {
             if (displayName != null && !displayName.equals(userEntity.getDisplayName())) {
                 userEntity.setDisplayName(displayName);
+                userEntity.setUpdatedAt(now);
                 userRepository.save(userEntity);
             }
             if ("disabled".equals(userEntity.getStatus())) {
@@ -129,6 +133,8 @@ public class Oauth2ServiceImpl implements Oauth2Service {
         }
 
         // Store or update OAuth2 account binding
+        boolean isNewAccount = !accountRepository.findByProviderAndProviderUserId(providerKey, providerUserId)
+            .isPresent();
         Oauth2AccountEntity accountEntity = accountRepository
             .findByProviderAndProviderUserId(providerKey, providerUserId)
             .orElse(Oauth2AccountEntity.builder()
@@ -136,14 +142,18 @@ public class Oauth2ServiceImpl implements Oauth2Service {
                 .provider(providerKey)
                 .providerUserId(providerUserId)
                 .providerUsername(providerUsername)
+                .createdAt(now)
+                .updatedAt(now)
                 .build());
         accountEntity.setAccessToken(tokenResponse.getAccessToken());
         if (tokenResponse.getRefreshToken() != null) {
             accountEntity.setRefreshToken(tokenResponse.getRefreshToken());
         }
         if (tokenResponse.getExpiresIn() != null) {
-            accountEntity.setTokenExpiresAt(
-                LocalDateTime.now().plusSeconds(tokenResponse.getExpiresIn()));
+            accountEntity.setTokenExpiresAt(now.plusSeconds(tokenResponse.getExpiresIn()));
+        }
+        if (!isNewAccount) {
+            accountEntity.setUpdatedAt(now);
         }
         accountRepository.save(accountEntity);
 

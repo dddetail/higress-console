@@ -12,6 +12,7 @@
  */
 package com.alibaba.higress.console.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -75,6 +76,9 @@ public class SsoConfigService {
         } else {
             entity.setIsPreset(false);
         }
+        LocalDateTime now = LocalDateTime.now();
+        entity.setCreatedAt(now);
+        entity.setUpdatedAt(now);
         return providerRepository.save(entity);
     }
 
@@ -83,6 +87,8 @@ public class SsoConfigService {
             .orElseThrow(() -> new ValidationException("Provider not found: " + entity.getId()));
         entity.setProviderKey(existing.getProviderKey());
         entity.setIsPreset(existing.getIsPreset());
+        entity.setCreatedAt(existing.getCreatedAt());
+        entity.setUpdatedAt(LocalDateTime.now());
         return providerRepository.save(entity);
     }
 
