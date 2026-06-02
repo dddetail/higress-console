@@ -169,7 +169,7 @@ Higress Console 当前仅支持单一管理员账号（admin），凭据存储�
 | id | BIGINT (PK) | 用户 ID |
 | username | VARCHAR(64) | 用户名（唯一） |
 | display_name | VARCHAR(128) | 显示名称 |
-| avatar_url | VARCHAR(512) | 头像 URL |
+| employee_id | VARCHAR(64) | 工号（可选） |
 | type | VARCHAR(16) | 用户类型：`platform_admin` / `consumer_user` |
 | status | VARCHAR(16) | 状态：`active` / `disabled` |
 | created_at | DATETIME | 创建时间 |
