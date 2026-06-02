@@ -100,6 +100,44 @@ const Login: React.FC = () => {
             submitText: t('login.buttonText'),
           },
         }}
+        actions={
+          <>
+            {oauthError && (
+              <Alert
+                type="error"
+                message={oauthError}
+                style={{ maxWidth: 328, margin: '16px auto 0' }}
+                closable
+                onClose={() => setOauthError(undefined)}
+              />
+            )}
+            {ssoProviders.length > 0 && (
+              <>
+                <Divider style={{ maxWidth: 328, margin: '16px auto' }}>
+                  {t('sso.orDivider')}
+                </Divider>
+                <div className={styles['sso-buttons']}>
+                  <p className={styles['sso-label']}>{t('sso.ssoLogin')}</p>
+                  <Space direction="vertical" style={{ width: '100%', maxWidth: 328 }}>
+                    {ssoProviders.map((provider) => (
+                      <Button
+                        key={provider.providerKey}
+                        block
+                        size="large"
+                        onClick={() => handleSsoLogin(provider.providerKey)}
+                        icon={provider.iconUrl ? (
+                          <img src={provider.iconUrl} alt={provider.name} style={{ width: 18, height: 18 }} />
+                        ) : undefined}
+                      >
+                        {t('sso.loginWith', { name: provider.name })}
+                      </Button>
+                    ))}
+                  </Space>
+                </div>
+              </>
+            )}
+          </>
+        }
       >
         <ProFormText
           name="username"
@@ -157,42 +195,6 @@ const Login: React.FC = () => {
           </a>
         </div>
       </LoginForm>
-
-      {oauthError && (
-        <Alert
-          type="error"
-          message={oauthError}
-          style={{ maxWidth: 328, margin: '0 auto 16px' }}
-          closable
-          onClose={() => setOauthError(undefined)}
-        />
-      )}
-
-      {ssoProviders.length > 0 && (
-        <>
-          <Divider style={{ maxWidth: 328, margin: '16px auto' }}>
-            {t('sso.orDivider')}
-          </Divider>
-          <div className={styles['sso-buttons']}>
-            <p className={styles['sso-label']}>{t('sso.ssoLogin')}</p>
-            <Space direction="vertical" style={{ width: '100%', maxWidth: 328 }}>
-              {ssoProviders.map((provider) => (
-                <Button
-                  key={provider.providerKey}
-                  block
-                  size="large"
-                  onClick={() => handleSsoLogin(provider.providerKey)}
-                  icon={provider.iconUrl ? (
-                    <img src={provider.iconUrl} alt={provider.name} style={{ width: 18, height: 18 }} />
-                  ) : undefined}
-                >
-                  {t('sso.loginWith', { name: provider.name })}
-                </Button>
-              ))}
-            </Space>
-          </div>
-        </>
-      )}
     </div>
   );
 };
