@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS `user` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `username` VARCHAR(64) NOT NULL,
+    `display_name` VARCHAR(128) NOT NULL,
+    `employee_id` VARCHAR(64) DEFAULT NULL,
+    `type` VARCHAR(16) NOT NULL DEFAULT 'consumer_user',
+    `status` VARCHAR(16) NOT NULL DEFAULT 'active',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_username` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
