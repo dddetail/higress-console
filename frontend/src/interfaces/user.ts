@@ -4,6 +4,7 @@ export interface UserInfo {
   type?: 'user' | 'admin' | 'guest';
   avatarUrl?: string;
   employeeId?: string;
+  role?: string; // platform_admin / owner / manager / reader
 }
 
 export interface LoginParams {
@@ -37,4 +38,29 @@ export interface UserListItem {
   employeeId?: string;
   type: string;
   status: string;
+  role?: string;
+}
+
+export interface ConsumerGroup {
+  id: number;
+  nameCn: string;
+  nameEn: string;
+  shortName: string;
+  description?: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConsumerGroupMember {
+  id: number;
+  groupId: number;
+  username: string;
+}
+
+export interface ConsumerGroupApiGrant {
+  id: number;
+  groupId: number;
+  resourceType: string;
+  resourceName: string;
 }

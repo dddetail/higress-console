@@ -32,3 +32,7 @@ export async function updateUserStatus(username: string, status: string): Promis
 export async function deleteUser(username: string): Promise<any> {
   return await request.delete(`/user/${username}`);
 }
+
+export async function updateUserRole(username: string, role: string): Promise<any> {
+  return await request.put(`/user/${username}/role`, { role });
+}

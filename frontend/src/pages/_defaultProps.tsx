@@ -100,6 +100,11 @@ export default {
         icon: <SafetyCertificateOutlined />,
       },
       {
+        name: 'menu.consumerGroupManagement',
+        path: '/consumer-group',
+        icon: <TeamOutlined />,
+      },
+      {
         name: 'menu.consumerManagement',
         path: '/consumer',
         icon: <UserOutlined />,
@@ -108,6 +113,7 @@ export default {
         name: 'menu.userManagement',
         path: '/user/list',
         icon: <TeamOutlined />,
+        requiredRole: ['platform_admin', 'owner'],
       },
       {
         name: 'menu.pluginManagement',
@@ -118,6 +124,7 @@ export default {
         name: 'menu.systemSettings',
         path: '/system',
         icon: <SettingOutlined />,
+        requiredRole: ['platform_admin'],
       },
     ],
   },

@@ -58,9 +58,15 @@ export default function Layout() {
         }}
         menu={{ defaultOpenAll: true }}
         menuDataRender={(items) => {
+          const userRole = userState.currentUser?.role || 'reader';
           function filterMenuItem(item) {
             if (item.hideFromMenu) {
               return false;
+            }
+            if (item.requiredRole && Array.isArray(item.requiredRole)) {
+              if (!item.requiredRole.includes(userRole)) {
+                return false;
+              }
             }
             if (typeof item.visiblePredicate === 'function') {
               return item.visiblePredicate(configData);
