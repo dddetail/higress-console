@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Alibaba Group Holding Ltd.
+ * Copyright (c) 2022-2026 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -16,9 +16,12 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.alibaba.higress.console.repository.entity.ConsumerGroupApiGrantEntity;
+import com.alibaba.higress.console.repository.entity.ConsumerMemberEntity;
 
-public interface ConsumerGroupApiGrantRepository extends JpaRepository<ConsumerGroupApiGrantEntity, Long> {
-    List<ConsumerGroupApiGrantEntity> findByGroupId(Long groupId);
-    void deleteByGroupId(Long groupId);
+public interface ConsumerMemberRepository extends JpaRepository<ConsumerMemberEntity, Long> {
+    List<ConsumerMemberEntity> findByConsumerName(String consumerName);
+    void deleteByConsumerName(String consumerName);
+    void deleteByConsumerNameAndUsername(String consumerName, String username);
+    boolean existsByConsumerNameAndUsername(String consumerName, String username);
+    List<ConsumerMemberEntity> findByUsername(String username);
 }

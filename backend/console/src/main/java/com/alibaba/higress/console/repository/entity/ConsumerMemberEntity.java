@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Alibaba Group Holding Ltd.
+ * Copyright (c) 2022-2026 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -31,15 +31,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "consumer_group_member")
-public class ConsumerGroupMemberEntity {
+@Table(name = "consumer_member")
+public class ConsumerMemberEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long groupId;
+    @Column(nullable = false, length = 128)
+    private String consumerName;
 
     @Column(nullable = false, length = 64)
     private String username;

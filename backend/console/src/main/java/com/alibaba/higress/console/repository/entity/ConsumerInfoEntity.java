@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Alibaba Group Holding Ltd.
+ * Copyright (c) 2022-2026 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -31,22 +31,34 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "consumer_group_api_grant")
-public class ConsumerGroupApiGrantEntity {
+@Table(name = "consumer_info")
+public class ConsumerInfoEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long groupId;
-
-    @Column(nullable = false, length = 32)
-    private String resourceType;
+    @Column(nullable = false, unique = true, length = 128)
+    private String consumerName;
 
     @Column(nullable = false, length = 128)
-    private String resourceName;
+    private String nameCn;
+
+    @Column(nullable = false, length = 128)
+    private String nameEn;
+
+    @Column(nullable = false, unique = true, length = 64)
+    private String shortName;
+
+    @Column(length = 512)
+    private String description;
+
+    @Column(nullable = false, length = 16)
+    private String status;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
 }
