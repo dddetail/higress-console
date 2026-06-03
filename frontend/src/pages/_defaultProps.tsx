@@ -100,14 +100,9 @@ export default {
         icon: <SafetyCertificateOutlined />,
       },
       {
-        name: 'menu.consumerGroupManagement',
-        path: '/consumer-group',
-        icon: <TeamOutlined />,
-      },
-      {
         name: 'menu.consumerManagement',
         path: '/consumer',
-        icon: <UserOutlined />,
+        icon: <TeamOutlined />,
       },
       {
         name: 'menu.userManagement',
