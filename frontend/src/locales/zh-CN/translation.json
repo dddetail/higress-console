@@ -125,6 +125,9 @@
   "consumer": {
     "columns": {
       "name": "消费者名称",
+      "nameCn": "中文名称",
+      "shortName": "简称",
+      "memberCount": "成员数",
       "authMethods": "认证方式"
     },
     "create": "创建消费者",
@@ -133,6 +136,13 @@
     "consumerForm": {
       "name": "消费者名称",
       "nameRequired": "请输入消费者名称",
+      "nameCn": "中文名称",
+      "nameCnRequired": "请输入中文名称",
+      "nameEn": "英文名称",
+      "nameEnRequired": "请输入英文名称",
+      "shortName": "简称",
+      "shortNameRequired": "请输入简称",
+      "description": "描述",
       "tokenSourceRequired": "请选择令牌来源",
       "authTokenRequired": "请输入认证令牌",
       "headerNameRequired": "请输入Header名称",
@@ -149,7 +159,12 @@
     "paramName": "参数名称",
     "deleteSuccess": "删除成功",
     "search": "查询",
-    "key": "密钥"
+    "key": "密钥",
+    "memberManagement": "成员管理",
+    "addMember": "添加成员",
+    "removeMember": "移除",
+    "memberUsername": "账号",
+    "selectUsers": "选择用户"
   },
   "domain": {
     "columns": {
@@ -1087,35 +1102,6 @@
     "deleteConfirm": "确定要删除该用户吗？",
     "platformAdmin": "平台管理员",
     "consumerUser": "普通用户"
-  },
-  "consumerGroup": {
-    "nameCn": "中文名称",
-    "nameEn": "英文名称",
-    "shortName": "简称",
-    "description": "描述",
-    "status": "状态",
-    "statusActive": "正常",
-    "statusDisabled": "已禁用",
-    "create": "新建消费者组",
-    "edit": "编辑消费者组",
-    "updateSuccess": "更新成功",
-    "createSuccess": "创建成功",
-    "deleteSuccess": "删除成功",
-    "deleteConfirm": "确定删除消费者组 {{name}} 吗？",
-    "viewDetail": "详情",
-    "tabInfo": "基本信息",
-    "tabMembers": "成员管理",
-    "tabGrants": "API 授权",
-    "addMember": "添加成员",
-    "addMemberSuccess": "成员添加成功",
-    "removeMember": "移除",
-    "removeMemberSuccess": "成员移除成功",
-    "memberUsername": "账号",
-    "memberDisplayName": "姓名",
-    "memberEmployeeId": "工号",
-    "grantResourceType": "资源类型",
-    "grantResourceName": "资源名称",
-    "selectUsers": "选择用户"
   },
   "permission": {
     "denied": "权限不足"
