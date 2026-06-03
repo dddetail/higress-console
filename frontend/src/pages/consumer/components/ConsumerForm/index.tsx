@@ -108,6 +108,36 @@ const ConsumerForm: React.FC = forwardRef((props, ref) => {
           disabled={value}
         />
       </Form.Item>
+      <Form.Item
+        label={t('consumer.consumerForm.nameCn')}
+        required
+        name="nameCn"
+        rules={[{ required: true, message: t('consumer.consumerForm.nameCnRequired') || '' }]}
+      >
+        <Input allowClear maxLength={128} />
+      </Form.Item>
+      <Form.Item
+        label={t('consumer.consumerForm.nameEn')}
+        required
+        name="nameEn"
+        rules={[{ required: true, message: t('consumer.consumerForm.nameEnRequired') || '' }]}
+      >
+        <Input allowClear maxLength={128} />
+      </Form.Item>
+      <Form.Item
+        label={t('consumer.consumerForm.shortName')}
+        required
+        name="shortName"
+        rules={[{ required: true, message: t('consumer.consumerForm.shortNameRequired') || '' }]}
+      >
+        <Input allowClear maxLength={64} disabled={!!value} />
+      </Form.Item>
+      <Form.Item
+        label={t('consumer.consumerForm.description')}
+        name="description"
+      >
+        <Input.TextArea rows={2} maxLength={512} />
+      </Form.Item>
       <div>{t("consumer.columns.authMethods")}</div>
       <Tabs
         activeKey={activeTabKey}

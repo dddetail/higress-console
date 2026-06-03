@@ -1,11 +1,12 @@
 /* eslint-disable */
 // @ts-nocheck
-import { Consumer, CredentialType, ServiceSourceFormProps as FormProps } from '@/interfaces/consumer';
-import { addConsumer, deleteConsumer, getConsumers, updateConsumer } from '@/services/consumer';
+import { ConsumerDetail, ConsumerCreateRequest, CredentialType, ServiceSourceFormProps as FormProps } from '@/interfaces/consumer';
+import { addConsumer, deleteConsumer, getConsumers, updateConsumer, listConsumerMembers, addConsumerMembers, removeConsumerMember } from '@/services/consumer';
+import { listUsers } from '@/services/user';
 import { ExclamationCircleOutlined, RedoOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-layout';
 import { useRequest } from 'ahooks';
-import { Button, Drawer, Form, Input, message, Modal, Space, Table, Tag } from 'antd';
+import { Button, Drawer, Form, Input, message, Modal, Select, Space, Table, Tag } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import ConsumerForm from './components/ConsumerForm';
@@ -23,6 +24,18 @@ const ConsumerList: React.FC = () => {
       dataIndex: 'name',
       key: 'name',
       ellipsis: true,
+    },
+    {
+      title: t('consumer.columns.nameCn'),
+      dataIndex: 'nameCn',
+      key: 'nameCn',
+      ellipsis: true,
+      render: (val: string) => val || '-',
+    },
+    {
+      title: t('consumer.columns.shortName'),
+      dataIndex: 'shortName',
+      key: 'shortName',
     },
     {
       title: t('consumer.columns.authMethods'),
@@ -56,11 +69,22 @@ const ConsumerList: React.FC = () => {
       },
     },
     {
+      title: t('consumer.columns.memberCount'),
+      key: 'memberCount',
+      width: 100,
+      align: 'center' as const,
+      render: (_: any, record: ConsumerDetail) => (
+        <a onClick={() => onShowMemberDrawer(record)}>
+          {record.members?.length ?? 0}
+        </a>
+      ),
+    },
+    {
       title: t('misc.actions'),
       dataIndex: 'action',
       key: 'action',
       width: 140,
-      align: 'center',
+      align: 'center' as const,
       render: (_, record) => (
         <Space size="small">
           <a onClick={() => onEditDrawer(record)}>{t('misc.edit')}</a>
@@ -72,18 +96,26 @@ const ConsumerList: React.FC = () => {
 
   const [form] = Form.useForm();
   const formRef = useRef<FormRef>(null);
-  const [allConsumers, setAllConsumers] = useState<Consumer[]>([]);
+  const [allConsumers, setAllConsumers] = useState<ConsumerDetail[]>([]);
   const [keyword, setKeyword] = useState('');
   const [keySearch, setKeySearch] = useState('');
-  const [currentConsumer, setCurrentConsumer] = useState<Consumer>({} as Consumer);
+  const [currentConsumer, setCurrentConsumer] = useState<ConsumerDetail>({} as ConsumerDetail);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
 
+  // Member management state
+  const [memberDrawerVisible, setMemberDrawerVisible] = useState(false);
+  const [memberConsumer, setMemberConsumer] = useState<ConsumerDetail | null>(null);
+  const [consumerMembers, setConsumerMembers] = useState<string[]>([]);
+  const [addMemberVisible, setAddMemberVisible] = useState(false);
+  const [selectedUsernames, setSelectedUsernames] = useState<string[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+
   const { loading, run, refresh } = useRequest(getConsumers, {
     manual: true,
     onSuccess: (result) => {
-      const consumers = (result || []) as Consumer[];
+      const consumers = (result || []) as ConsumerDetail[];
       consumers.sort((i1, i2) => {
         return i1.name.localeCompare(i2.name);
       })
@@ -92,11 +124,21 @@ const ConsumerList: React.FC = () => {
     },
   });
 
+  const { loading: membersLoading, run: fetchMembers } = useRequest(
+    (name: string) => listConsumerMembers(name),
+    { manual: true, onSuccess: (result) => setConsumerMembers(result || []) },
+  );
+
+  const { run: fetchUsers } = useRequest(listUsers, {
+    manual: true,
+    onSuccess: (result) => setAllUsers((result || []) as any[]),
+  });
+
   useEffect(() => {
     run({});
   }, []);
 
-  const onEditDrawer = (consumer: Consumer) => {
+  const onEditDrawer = (consumer: ConsumerDetail) => {
     setCurrentConsumer(consumer);
     setOpenDrawer(true);
   };
@@ -114,9 +156,9 @@ const ConsumerList: React.FC = () => {
 
     try {
       if (currentConsumer) {
-        await updateConsumer({ version: currentConsumer.version, ...values } as Consumer);
+        await updateConsumer(currentConsumer.name, values as ConsumerCreateRequest);
       } else {
-        await addConsumer({ ...values, version: 0 } as Consumer);
+        await addConsumer(values as ConsumerCreateRequest);
       }
       setOpenDrawer(false);
       formRef.current && formRef.current.reset();
@@ -132,7 +174,7 @@ const ConsumerList: React.FC = () => {
     setCurrentConsumer(null);
   };
 
-  const onShowModal = (consumer: Consumer) => {
+  const onShowModal = (consumer: ConsumerDetail) => {
     setCurrentConsumer(consumer);
     setOpenModal(true);
   };
@@ -159,6 +201,38 @@ const ConsumerList: React.FC = () => {
     form.resetFields();
   };
 
+  // Member management handlers
+  const onShowMemberDrawer = (consumer: ConsumerDetail) => {
+    setMemberConsumer(consumer);
+    setConsumerMembers(consumer.members || []);
+    setMemberDrawerVisible(true);
+    fetchUsers();
+  };
+
+  const handleRemoveMember = async (username: string) => {
+    if (!memberConsumer) return;
+    try {
+      await removeConsumerMember(memberConsumer.name, username);
+      fetchMembers(memberConsumer.name);
+      refresh();
+    } catch (e) {
+      // handled by interceptor
+    }
+  };
+
+  const handleAddMembers = async () => {
+    if (!memberConsumer || selectedUsernames.length === 0) return;
+    try {
+      await addConsumerMembers(memberConsumer.name, selectedUsernames);
+      setAddMemberVisible(false);
+      setSelectedUsernames([]);
+      fetchMembers(memberConsumer.name);
+      refresh();
+    } catch (e) {
+      // handled by interceptor
+    }
+  };
+
   const dataSource = React.useMemo(() => {
     return allConsumers.filter((item) => {
       if (keyword && !item.name.toLowerCase().includes(keyword.toLowerCase())) {
@@ -170,6 +244,10 @@ const ConsumerList: React.FC = () => {
       return true;
     });
   }, [allConsumers, keyword, keySearch]);
+
+  const availableUsers = allUsers.filter(
+    (u: any) => !consumerMembers.some((m) => m === u.name),
+  );
 
   return (
     <PageContainer>
@@ -260,6 +338,66 @@ const ConsumerList: React.FC = () => {
             确定删除 <span style={{ color: '#0070cc' }}>{{ currentConsumerName: (currentConsumer && currentConsumer.name) || '' }}</span> 吗？
           </Trans>
         </p>
+      </Modal>
+
+      {/* Member management Drawer */}
+      <Drawer
+        title={`${t('consumer.memberManagement')} - ${memberConsumer?.name || ''}`}
+        placement="right"
+        width={480}
+        onClose={() => { setMemberDrawerVisible(false); setMemberConsumer(null); }}
+        open={memberDrawerVisible}
+        extra={
+          <Space>
+            <Button onClick={() => { setMemberDrawerVisible(false); setMemberConsumer(null); }}>
+              {t('misc.cancel')}
+            </Button>
+            <Button type="primary" onClick={() => setAddMemberVisible(true)}>
+              {t('consumer.addMember')}
+            </Button>
+          </Space>
+        }
+      >
+        <Table
+          loading={membersLoading}
+          dataSource={consumerMembers.map((u) => ({ username: u }))}
+          columns={[
+            { title: t('consumer.memberUsername'), dataIndex: 'username', key: 'username' },
+            {
+              title: t('misc.actions'),
+              key: 'action',
+              width: 80,
+              align: 'center' as const,
+              render: (_: any, record: any) => (
+                <a onClick={() => handleRemoveMember(record.username)}>{t('consumer.removeMember')}</a>
+              ),
+            },
+          ]}
+          rowKey="username"
+          pagination={false}
+        />
+      </Drawer>
+
+      {/* Add member Modal */}
+      <Modal
+        title={t('consumer.addMember')}
+        open={addMemberVisible}
+        onOk={handleAddMembers}
+        onCancel={() => { setAddMemberVisible(false); setSelectedUsernames([]); }}
+        okText={t('misc.confirm')}
+        cancelText={t('misc.cancel')}
+      >
+        <Select
+          mode="multiple"
+          style={{ width: '100%' }}
+          placeholder={t('consumer.selectUsers')}
+          value={selectedUsernames}
+          onChange={setSelectedUsernames}
+          options={availableUsers.map((u: any) => ({
+            label: `${u.displayName || u.name} (${u.name})`,
+            value: u.name,
+          }))}
+        />
       </Modal>
     </PageContainer>
   );
