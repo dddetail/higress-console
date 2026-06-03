@@ -74,7 +74,7 @@ public class ConsumerGroupServiceImpl implements ConsumerGroupService {
     @Override
     @Transactional
     public void deleteGroup(Long id) {
-        memberRepository.findByGroupId(id).forEach(m -> memberRepository.delete(m));
+        memberRepository.deleteByGroupId(id);
         grantRepository.deleteByGroupId(id);
         groupRepository.deleteById(id);
     }

@@ -20,6 +20,7 @@ import com.alibaba.higress.console.repository.entity.ConsumerGroupMemberEntity;
 
 public interface ConsumerGroupMemberRepository extends JpaRepository<ConsumerGroupMemberEntity, Long> {
     List<ConsumerGroupMemberEntity> findByGroupId(Long groupId);
+    void deleteByGroupId(Long groupId);
     void deleteByGroupIdAndUsername(Long groupId, String username);
     boolean existsByGroupIdAndUsername(Long groupId, String username);
     List<ConsumerGroupMemberEntity> findByUsername(String username);
