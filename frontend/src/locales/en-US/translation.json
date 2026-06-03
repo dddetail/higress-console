@@ -830,7 +830,13 @@
       "confirmPasswordRequired": "Please re-type the new password here",
       "confirmPasswordMismatched": "New password does not match. Enter new password again here.",
       "reloginPrompt": "Password is changed successfully. Please re-login."
-    }
+    },
+    "role": "Role",
+    "roleAdmin": "Admin",
+    "roleOwner": "Owner",
+    "roleManager": "Manager",
+    "roleReader": "Reader",
+    "assignRole": "Assign Role"
   },
   "misc": {
     "logout": "Logout",
@@ -1080,5 +1086,37 @@
     "deleteConfirm": "Are you sure you want to delete this user?",
     "platformAdmin": "Platform Admin",
     "consumerUser": "Consumer User"
+  },
+  "consumerGroup": {
+    "nameCn": "Chinese Name",
+    "nameEn": "English Name",
+    "shortName": "Short Name",
+    "description": "Description",
+    "status": "Status",
+    "statusActive": "Active",
+    "statusDisabled": "Disabled",
+    "create": "Create Consumer Group",
+    "edit": "Edit Consumer Group",
+    "updateSuccess": "Updated successfully",
+    "createSuccess": "Created successfully",
+    "deleteSuccess": "Deleted successfully",
+    "deleteConfirm": "Are you sure to delete consumer group {{name}}?",
+    "viewDetail": "Detail",
+    "tabInfo": "Basic Info",
+    "tabMembers": "Members",
+    "tabGrants": "API Grants",
+    "addMember": "Add Member",
+    "addMemberSuccess": "Member added",
+    "removeMember": "Remove",
+    "removeMemberSuccess": "Member removed",
+    "memberUsername": "Username",
+    "memberDisplayName": "Display Name",
+    "memberEmployeeId": "Employee ID",
+    "grantResourceType": "Resource Type",
+    "grantResourceName": "Resource Name",
+    "selectUsers": "Select users"
+  },
+  "permission": {
+    "denied": "Permission Denied"
   }
 }

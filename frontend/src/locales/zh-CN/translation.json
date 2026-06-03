@@ -830,7 +830,13 @@
       "confirmPasswordRequired": "请确认新密码",
       "confirmPasswordMismatched": "两次输入的新密码不一致",
       "reloginPrompt": "登录密码已更改，请重新登录。"
-    }
+    },
+    "role": "角色",
+    "roleAdmin": "管理员",
+    "roleOwner": "Owner",
+    "roleManager": "Manager",
+    "roleReader": "Reader",
+    "assignRole": "分配角色"
   },
   "misc": {
     "logout": "退出登录",
@@ -1080,5 +1086,37 @@
     "deleteConfirm": "确定要删除该用户吗？",
     "platformAdmin": "平台管理员",
     "consumerUser": "普通用户"
+  },
+  "consumerGroup": {
+    "nameCn": "中文名称",
+    "nameEn": "英文名称",
+    "shortName": "简称",
+    "description": "描述",
+    "status": "状态",
+    "statusActive": "正常",
+    "statusDisabled": "已禁用",
+    "create": "新建消费者组",
+    "edit": "编辑消费者组",
+    "updateSuccess": "更新成功",
+    "createSuccess": "创建成功",
+    "deleteSuccess": "删除成功",
+    "deleteConfirm": "确定删除消费者组 {{name}} 吗？",
+    "viewDetail": "详情",
+    "tabInfo": "基本信息",
+    "tabMembers": "成员管理",
+    "tabGrants": "API 授权",
+    "addMember": "添加成员",
+    "addMemberSuccess": "成员添加成功",
+    "removeMember": "移除",
+    "removeMemberSuccess": "成员移除成功",
+    "memberUsername": "账号",
+    "memberDisplayName": "姓名",
+    "memberEmployeeId": "工号",
+    "grantResourceType": "资源类型",
+    "grantResourceName": "资源名称",
+    "selectUsers": "选择用户"
+  },
+  "permission": {
+    "denied": "权限不足"
   }
 }
