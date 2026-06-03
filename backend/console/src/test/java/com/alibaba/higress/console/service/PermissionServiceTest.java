@@ -50,8 +50,8 @@ class PermissionServiceTest {
             assertTrue(permissionService.hasPermission("platform_admin", "user", "write"));
             assertTrue(permissionService.hasPermission("platform_admin", "oauth2_provider", "read"));
             assertTrue(permissionService.hasPermission("platform_admin", "oauth2_provider", "write"));
-            assertTrue(permissionService.hasPermission("platform_admin", "consumer_group", "read"));
-            assertTrue(permissionService.hasPermission("platform_admin", "consumer_group", "write"));
+            assertTrue(permissionService.hasPermission("platform_admin", "consumer", "read"));
+            assertTrue(permissionService.hasPermission("platform_admin", "consumer", "write"));
         }
     }
 
@@ -61,7 +61,7 @@ class PermissionServiceTest {
 
         @ParameterizedTest(name = "owner can read resource={0}")
         @DisplayName("owner can read all non-system resources")
-        @CsvSource({"route", "domain", "service_source", "consumer", "consumer_group",
+        @CsvSource({"route", "domain", "service_source", "consumer",
             "wasm_plugin", "plugin_instance", "dashboard", "tls_certificate",
             "ai_route", "llm_provider", "mcp_server"})
         void ownerCanRead(String resource) {
@@ -70,7 +70,7 @@ class PermissionServiceTest {
 
         @ParameterizedTest(name = "owner can write resource={0}")
         @DisplayName("owner can write all non-system resources")
-        @CsvSource({"route", "domain", "service_source", "consumer", "consumer_group",
+        @CsvSource({"route", "domain", "service_source", "consumer",
             "wasm_plugin", "plugin_instance", "ai_route", "llm_provider", "mcp_server"})
         void ownerCanWrite(String resource) {
             assertTrue(permissionService.hasPermission("owner", resource, "write"));
@@ -108,7 +108,7 @@ class PermissionServiceTest {
             assertTrue(permissionService.hasPermission("manager", "route", "read"));
             assertTrue(permissionService.hasPermission("manager", "domain", "read"));
             assertTrue(permissionService.hasPermission("manager", "consumer", "read"));
-            assertTrue(permissionService.hasPermission("manager", "consumer_group", "read"));
+            assertTrue(permissionService.hasPermission("manager", "consumer", "read"));
         }
 
         @Test
@@ -117,7 +117,6 @@ class PermissionServiceTest {
             assertTrue(permissionService.hasPermission("manager", "route", "write"));
             assertTrue(permissionService.hasPermission("manager", "domain", "write"));
             assertTrue(permissionService.hasPermission("manager", "consumer", "write"));
-            assertTrue(permissionService.hasPermission("manager", "consumer_group", "write"));
         }
 
         @Test
@@ -145,7 +144,7 @@ class PermissionServiceTest {
             assertTrue(permissionService.hasPermission("reader", "route", "read"));
             assertTrue(permissionService.hasPermission("reader", "domain", "read"));
             assertTrue(permissionService.hasPermission("reader", "consumer", "read"));
-            assertTrue(permissionService.hasPermission("reader", "consumer_group", "read"));
+            assertTrue(permissionService.hasPermission("reader", "consumer", "read"));
         }
 
         @Test
@@ -154,7 +153,6 @@ class PermissionServiceTest {
             assertFalse(permissionService.hasPermission("reader", "route", "write"));
             assertFalse(permissionService.hasPermission("reader", "domain", "write"));
             assertFalse(permissionService.hasPermission("reader", "consumer", "write"));
-            assertFalse(permissionService.hasPermission("reader", "consumer_group", "write"));
         }
 
         @Test

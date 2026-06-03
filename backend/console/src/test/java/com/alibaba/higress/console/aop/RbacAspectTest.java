@@ -36,7 +36,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.alibaba.higress.console.controller.ConsumerGroupController;
+import com.alibaba.higress.console.controller.ConsumersController;
 import com.alibaba.higress.console.controller.SessionController;
 import com.alibaba.higress.console.controller.UserController;
 import com.alibaba.higress.console.controller.exception.AuthException;
@@ -134,17 +134,17 @@ class RbacAspectTest {
     class RequirePermissionTests {
 
         @Test
-        @DisplayName("ConsumerGroupController.list() has @RequirePermission and checks permission")
+        @DisplayName("ConsumersController.list() has @RequirePermission and checks permission")
         void checksPermission() throws Throwable {
             User adminUser = User.builder().name("admin").role("platform_admin").build();
             SessionUserHelper.setCurrentUser(adminUser);
 
-            setupJoinPointForController(ConsumerGroupController.class, "list");
-            when(permissionService.hasPermission("platform_admin", "consumer_group", "read")).thenReturn(true);
+            setupJoinPointForController(ConsumersController.class, "list");
+            when(permissionService.hasPermission("platform_admin", "consumer", "read")).thenReturn(true);
 
             rbacAspect.checkPermission(joinPoint);
 
-            verify(permissionService).hasPermission("platform_admin", "consumer_group", "read");
+            verify(permissionService).hasPermission("platform_admin", "consumer", "read");
             verify(joinPoint).proceed();
         }
 
@@ -154,12 +154,12 @@ class RbacAspectTest {
             User readerUser = User.builder().name("reader1").role("reader").build();
             SessionUserHelper.setCurrentUser(readerUser);
 
-            setupJoinPointForController(ConsumerGroupController.class, "list");
-            when(permissionService.hasPermission("reader", "consumer_group", "read")).thenReturn(true);
-            // create method requires write permission
-            setupJoinPointForController(ConsumerGroupController.class, "create",
-                com.alibaba.higress.console.controller.dto.ConsumerGroupRequest.class);
-            when(permissionService.hasPermission("reader", "consumer_group", "write")).thenReturn(false);
+            setupJoinPointForController(ConsumersController.class, "list");
+            when(permissionService.hasPermission("reader", "consumer", "read")).thenReturn(true);
+            // add method requires write permission
+            setupJoinPointForController(ConsumersController.class, "add",
+                com.alibaba.higress.console.controller.dto.ConsumerCreateRequest.class);
+            when(permissionService.hasPermission("reader", "consumer", "write")).thenReturn(false);
 
             assertThrows(AuthException.class, () -> rbacAspect.checkPermission(joinPoint));
         }
@@ -175,14 +175,14 @@ class RbacAspectTest {
             User sessionUser = User.builder().name("admin").role("platform_admin").build();
             SessionUserHelper.setCurrentUser(sessionUser);
 
-            setupJoinPointForController(ConsumerGroupController.class, "list");
-            when(permissionService.hasPermission("platform_admin", "consumer_group", "read")).thenReturn(true);
+            setupJoinPointForController(ConsumersController.class, "list");
+            when(permissionService.hasPermission("platform_admin", "consumer", "read")).thenReturn(true);
 
             rbacAspect.checkPermission(joinPoint);
 
             // Should NOT query database since role is in session
             verify(userService, never()).findByUsername(anyString());
-            verify(permissionService).hasPermission("platform_admin", "consumer_group", "read");
+            verify(permissionService).hasPermission("platform_admin", "consumer", "read");
         }
 
         @Test
@@ -194,13 +194,13 @@ class RbacAspectTest {
             User dbUser = User.builder().name("oauth_user").role("manager").build();
             when(userService.findByUsername("oauth_user")).thenReturn(dbUser);
 
-            setupJoinPointForController(ConsumerGroupController.class, "list");
-            when(permissionService.hasPermission("manager", "consumer_group", "read")).thenReturn(true);
+            setupJoinPointForController(ConsumersController.class, "list");
+            when(permissionService.hasPermission("manager", "consumer", "read")).thenReturn(true);
 
             rbacAspect.checkPermission(joinPoint);
 
             verify(userService).findByUsername("oauth_user");
-            verify(permissionService).hasPermission("manager", "consumer_group", "read");
+            verify(permissionService).hasPermission("manager", "consumer", "read");
         }
 
         @Test
@@ -212,12 +212,12 @@ class RbacAspectTest {
             User dbUser = User.builder().name("norole_user").build(); // role is null
             when(userService.findByUsername("norole_user")).thenReturn(dbUser);
 
-            setupJoinPointForController(ConsumerGroupController.class, "list");
-            when(permissionService.hasPermission("reader", "consumer_group", "read")).thenReturn(true);
+            setupJoinPointForController(ConsumersController.class, "list");
+            when(permissionService.hasPermission("reader", "consumer", "read")).thenReturn(true);
 
             rbacAspect.checkPermission(joinPoint);
 
-            verify(permissionService).hasPermission("reader", "consumer_group", "read");
+            verify(permissionService).hasPermission("reader", "consumer", "read");
         }
     }
 }
