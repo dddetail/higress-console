@@ -27,6 +27,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.MDC;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,6 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 @Aspect
 @Component
 @Slf4j
+@Order(1)
 public class ApiStandardizationAspect {
 
     private static final ConcurrentHashMap<Class<?>, Boolean> CLASS_ALLOW_ANONYMOUS_FLAGS = new ConcurrentHashMap<>();

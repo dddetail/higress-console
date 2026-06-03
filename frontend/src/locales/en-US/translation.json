@@ -19,6 +19,7 @@
     "domainManagement": "Domain Management",
     "certManagement": "Certificate Management",
     "consumerManagement": "Consumer Management",
+    "consumerGroupManagement": "Consumer Groups",
     "pluginManagement": "Plugin Management",
     "systemSettings": "System Settings",
     "mcpManagement": "MCP Management",

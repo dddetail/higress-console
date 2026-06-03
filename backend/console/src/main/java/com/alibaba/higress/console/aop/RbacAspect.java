@@ -1,3 +1,15 @@
+/*
+ * Copyright (c) 2022-2023 Alibaba Group Holding Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package com.alibaba.higress.console.aop;
 
 import java.lang.reflect.Method;
@@ -21,8 +33,8 @@ import com.alibaba.higress.console.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * RBAC 权限校验切面。在 ApiStandardizationAspect（登录校验）之后执行。
- * 检查 @RequirePermission 注解并做角色校验。
+ * RBAC permission check aspect. Executes after ApiStandardizationAspect (login check).
+ * Checks @RequirePermission annotation and enforces role-based access control.
  */
 @Aspect
 @Component
@@ -38,8 +50,14 @@ public class RbacAspect {
     @Resource
     private UserService userService;
 
+    private static final ConcurrentHashMap<String, Boolean> METHOD_ALLOW_ANONYMOUS_CACHE = new ConcurrentHashMap<>();
+
     @Around("execution(* com.alibaba.higress.console.controller..*Controller.*(..))")
     public Object checkPermission(ProceedingJoinPoint point) throws Throwable {
+        if (isAllowAnonymous(point)) {
+            return point.proceed();
+        }
+
         RequirePermission permission = getRequirePermission(point);
         if (permission == null) {
             return point.proceed();
@@ -50,23 +68,46 @@ public class RbacAspect {
             throw new AuthException("Login required.");
         }
 
-        User fullUser = userService.findByUsername(currentUser.getName());
-        if (fullUser == null) {
-            throw new AuthException("User not found.");
+        // Use role from session first (e.g., admin user from K8s Secret)
+        String role = currentUser.getRole();
+        if (role == null) {
+            // Fallback to database lookup for OAuth2 users
+            User fullUser = userService.findByUsername(currentUser.getName());
+            if (fullUser == null) {
+                throw new AuthException("User not found.");
+            }
+            role = fullUser.getRole();
         }
-
-        String role = fullUser.getRole();
         if (role == null) {
             role = "reader";
         }
 
         if (!permissionService.hasPermission(role, permission.resource(), permission.action())) {
-            log.warn("权限不足：user={}, role={}, resource={}, action={}",
+            log.warn("Permission denied: user={}, role={}, resource={}, action={}",
                 currentUser.getName(), role, permission.resource(), permission.action());
             throw new AuthException("Permission denied.");
         }
 
         return point.proceed();
+    }
+
+    private boolean isAllowAnonymous(ProceedingJoinPoint point) {
+        MethodSignature signature = (MethodSignature) point.getSignature();
+        String key = signature.getDeclaringTypeName() + "." + signature.getName();
+
+        return METHOD_ALLOW_ANONYMOUS_CACHE.computeIfAbsent(key, k -> {
+            try {
+                Class<?> targetClass = point.getTarget().getClass();
+                if (targetClass.getAnnotation(AllowAnonymous.class) != null) {
+                    return true;
+                }
+                Method method = targetClass.getMethod(signature.getName(), signature.getParameterTypes());
+                return method.getAnnotation(AllowAnonymous.class) != null;
+            } catch (Exception e) {
+                log.error("Failed to check AllowAnonymous annotation: {}", key, e);
+                return false;
+            }
+        });
     }
 
     private RequirePermission getRequirePermission(ProceedingJoinPoint point) {
@@ -83,7 +124,7 @@ public class RbacAspect {
                 }
                 return targetClass.getAnnotation(RequirePermission.class);
             } catch (Exception e) {
-                log.error("获取 RequirePermission 注解失败：{}", key, e);
+                log.error("Failed to get RequirePermission annotation: {}", key, e);
                 return null;
             }
         });

@@ -1,3 +1,15 @@
+/*
+ * Copyright (c) 2022-2023 Alibaba Group Holding Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package com.alibaba.higress.console.controller;
 
 import java.util.List;
@@ -37,14 +49,14 @@ public class ConsumerGroupController {
     private ConsumerGroupService consumerGroupService;
 
     @GetMapping
-    @Operation(summary = "消费者组列表")
+    @Operation(summary = "List consumer groups")
     @RequirePermission(resource = "consumer_group", action = "read")
     public ResponseEntity<Response<List<ConsumerGroupEntity>>> list() {
         return ControllerUtil.buildResponseEntity(consumerGroupService.listGroups());
     }
 
     @PostMapping
-    @Operation(summary = "创建消费者组")
+    @Operation(summary = "Create a consumer group")
     @RequirePermission(resource = "consumer_group", action = "write")
     public ResponseEntity<Response<ConsumerGroupEntity>> create(@RequestBody ConsumerGroupRequest request) {
         ConsumerGroupEntity entity = ConsumerGroupEntity.builder()
@@ -57,14 +69,14 @@ public class ConsumerGroupController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "获取消费者组详情")
+    @Operation(summary = "Get consumer group detail")
     @RequirePermission(resource = "consumer_group", action = "read")
     public ResponseEntity<Response<ConsumerGroupEntity>> get(@PathVariable Long id) {
         return ControllerUtil.buildResponseEntity(consumerGroupService.getGroup(id));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "更新消费者组")
+    @Operation(summary = "Update a consumer group")
     @RequirePermission(resource = "consumer_group", action = "write")
     public ResponseEntity<Response<ConsumerGroupEntity>> update(@PathVariable Long id,
         @RequestBody ConsumerGroupRequest request) {
@@ -77,7 +89,7 @@ public class ConsumerGroupController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "删除消费者组")
+    @Operation(summary = "Delete a consumer group")
     @RequirePermission(resource = "consumer_group", action = "write")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         consumerGroupService.deleteGroup(id);
@@ -87,14 +99,14 @@ public class ConsumerGroupController {
     // ===== Member management =====
 
     @GetMapping("/{id}/members")
-    @Operation(summary = "消费者组成员列表")
+    @Operation(summary = "List consumer group members")
     @RequirePermission(resource = "consumer_group", action = "read")
     public ResponseEntity<Response<List<ConsumerGroupMemberEntity>>> listMembers(@PathVariable Long id) {
         return ControllerUtil.buildResponseEntity(consumerGroupService.listMembers(id));
     }
 
     @PostMapping("/{id}/members")
-    @Operation(summary = "添加消费者组成员")
+    @Operation(summary = "Add members to consumer group")
     @RequirePermission(resource = "consumer_group", action = "write")
     public ResponseEntity<?> addMembers(@PathVariable Long id, @RequestBody List<String> usernames) {
         consumerGroupService.addMembers(id, usernames);
@@ -102,7 +114,7 @@ public class ConsumerGroupController {
     }
 
     @DeleteMapping("/{id}/members/{username}")
-    @Operation(summary = "移除消费者组成员")
+    @Operation(summary = "Remove a member from consumer group")
     @RequirePermission(resource = "consumer_group", action = "write")
     public ResponseEntity<?> removeMember(@PathVariable Long id, @PathVariable String username) {
         consumerGroupService.removeMember(id, username);
@@ -112,14 +124,14 @@ public class ConsumerGroupController {
     // ===== API grant management =====
 
     @GetMapping("/{id}/grants")
-    @Operation(summary = "消费者组已授权的 API 列表")
+    @Operation(summary = "List API grants of consumer group")
     @RequirePermission(resource = "consumer_group", action = "read")
     public ResponseEntity<Response<List<ConsumerGroupApiGrantEntity>>> listGrants(@PathVariable Long id) {
         return ControllerUtil.buildResponseEntity(consumerGroupService.listGrants(id));
     }
 
     @PutMapping("/{id}/grants")
-    @Operation(summary = "更新消费者组 API 授权")
+    @Operation(summary = "Update API grants of consumer group")
     @RequirePermission(resource = "consumer_group", action = "write")
     public ResponseEntity<?> updateGrants(@PathVariable Long id,
         @RequestBody List<ConsumerGroupApiGrantEntity> grants) {

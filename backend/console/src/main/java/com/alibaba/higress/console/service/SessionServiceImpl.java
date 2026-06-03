@@ -233,7 +233,7 @@ public class SessionServiceImpl implements SessionService {
                 oauth2User.setRole(dbUser.getRole());
             }
         } catch (Exception e) {
-            log.warn("查询用户角色失败：{}", username, e);
+            log.warn("Failed to query user role for: {}", username, e);
         }
         return oauth2User;
     }
@@ -442,7 +442,8 @@ public class SessionServiceImpl implements SessionService {
         }
 
         public User toUser() {
-            return User.builder().name(username).displayName(displayName).build();
+            return User.builder().name(username).displayName(displayName)
+                .type("admin").status("active").role("platform_admin").build();
         }
     }
 }
