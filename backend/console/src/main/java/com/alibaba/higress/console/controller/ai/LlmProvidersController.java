@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.higress.console.aop.RequirePermission;
 import com.alibaba.higress.console.controller.dto.PaginatedResponse;
 import com.alibaba.higress.console.controller.dto.Response;
 import com.alibaba.higress.console.controller.util.ControllerUtil;
@@ -46,6 +47,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/v1/ai/providers")
 @Validated
 @Tag(name = "LLM Provider APIs")
+@RequirePermission(resource = "llm_provider", action = "read")
 public class LlmProvidersController {
 
     private LlmProviderService llmProviderService;
@@ -64,6 +66,7 @@ public class LlmProvidersController {
         return ControllerUtil.buildResponseEntity(providers);
     }
 
+    @RequirePermission(resource = "llm_provider", action = "write")
     @PostMapping
     @Operation(summary = "Add a new LLM provider")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Route added successfully"),
@@ -86,6 +89,7 @@ public class LlmProvidersController {
         return ControllerUtil.buildResponseEntity(provider);
     }
 
+    @RequirePermission(resource = "llm_provider", action = "write")
     @PutMapping("/{name}")
     @Operation(summary = "Update an existed provider")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Provider updated successfully"),
@@ -104,6 +108,7 @@ public class LlmProvidersController {
         return ControllerUtil.buildResponseEntity(updatedProvider);
     }
 
+    @RequirePermission(resource = "llm_provider", action = "write")
     @DeleteMapping("/{name}")
     @Operation(summary = "Delete an LLM provider")
     @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Provider deleted successfully"),

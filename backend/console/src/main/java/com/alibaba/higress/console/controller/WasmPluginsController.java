@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.higress.console.aop.RequirePermission;
 import com.alibaba.higress.console.controller.dto.PaginatedResponse;
 import com.alibaba.higress.console.controller.dto.Response;
 import com.alibaba.higress.console.controller.util.ControllerUtil;
@@ -52,6 +53,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/v1/wasm-plugins")
 @Validated
 @Tag(name = "Wasm Plugin APIs")
+@RequirePermission(resource = "wasm_plugin", action = "read")
 public class WasmPluginsController {
 
     private WasmPluginService wasmPluginService;
@@ -82,6 +84,7 @@ public class WasmPluginsController {
     }
 
     @PostMapping
+    @RequirePermission(resource = "wasm_plugin", action = "write")
     @Operation(summary = "Add a new plugin")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Route added successfully"),
         @ApiResponse(responseCode = "400", description = "Plugin data is not valid"),
@@ -94,6 +97,7 @@ public class WasmPluginsController {
     }
 
     @PutMapping(value = "/{name}")
+    @RequirePermission(resource = "wasm_plugin", action = "write")
     @Operation(summary = "Update an existed plugin")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Plugin updated successfully"),
         @ApiResponse(responseCode = "400",
@@ -114,6 +118,7 @@ public class WasmPluginsController {
     }
 
     @DeleteMapping(value = "/{name}")
+    @RequirePermission(resource = "wasm_plugin", action = "write")
     @Operation(summary = "Delete a custom plugin")
     @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Plugin deleted successfully"),
         @ApiResponse(responseCode = "500", description = "Internal server error")})

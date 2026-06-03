@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.higress.console.aop.RequirePermission;
 import com.alibaba.higress.console.controller.dto.PaginatedResponse;
 import com.alibaba.higress.console.controller.dto.Response;
 import com.alibaba.higress.console.controller.util.ControllerUtil;
@@ -46,6 +47,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/v1/ai/routes")
 @Validated
 @Tag(name = "AI Route APIs")
+@RequirePermission(resource = "ai_route", action = "read")
 public class AiRoutesController {
 
     private AiRouteService aiRouteService;
@@ -64,6 +66,7 @@ public class AiRoutesController {
         return ControllerUtil.buildResponseEntity(routes);
     }
 
+    @RequirePermission(resource = "ai_route", action = "write")
     @PostMapping
     @Operation(summary = "Add a new AI route")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Route added successfully"),
@@ -86,6 +89,7 @@ public class AiRoutesController {
         return ControllerUtil.buildResponseEntity(route);
     }
 
+    @RequirePermission(resource = "ai_route", action = "write")
     @PutMapping("/{name}")
     @Operation(summary = "Update an existed AI route")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Route updated successfully"),
@@ -105,6 +109,7 @@ public class AiRoutesController {
         return ControllerUtil.buildResponseEntity(updatedRoute);
     }
 
+    @RequirePermission(resource = "ai_route", action = "write")
     @DeleteMapping("/{name}")
     @Operation(summary = "Delete an AI route")
     @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Route deleted successfully"),

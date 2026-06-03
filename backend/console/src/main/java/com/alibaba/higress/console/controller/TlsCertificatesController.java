@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.higress.console.aop.RequirePermission;
 import com.alibaba.higress.console.controller.dto.PaginatedResponse;
 import com.alibaba.higress.console.controller.dto.Response;
 import com.alibaba.higress.console.controller.util.ControllerUtil;
@@ -47,6 +48,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/v1/tls-certificates")
 @Validated
 @Tag(name = "TLS Certificate APIs")
+@RequirePermission(resource = "tls_certificate", action = "read")
 public class TlsCertificatesController {
 
     private TlsCertificateService tlsCertificateService;
@@ -69,6 +71,7 @@ public class TlsCertificatesController {
     }
 
     @PostMapping
+    @RequirePermission(resource = "tls_certificate", action = "write")
     @Operation(summary = "Add a new TLS certificate")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "TLS certificate added successfully"),
         @ApiResponse(responseCode = "400", description = "TLS certificate data is not valid"),
@@ -92,6 +95,7 @@ public class TlsCertificatesController {
     }
 
     @PutMapping("/{name}")
+    @RequirePermission(resource = "tls_certificate", action = "write")
     @Operation(summary = "Update an existed TLS certificate")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "TLS certificate updated successfully"),
         @ApiResponse(responseCode = "400",
@@ -111,6 +115,7 @@ public class TlsCertificatesController {
     }
 
     @DeleteMapping("/{name}")
+    @RequirePermission(resource = "tls_certificate", action = "write")
     @Operation(summary = "Delete a TLS certificate")
     @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "TLS certificate deleted successfully"),
         @ApiResponse(responseCode = "500", description = "Internal server error")})

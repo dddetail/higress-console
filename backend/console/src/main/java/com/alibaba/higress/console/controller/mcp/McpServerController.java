@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.higress.console.controller.dto.PaginatedResponse;
+import com.alibaba.higress.console.aop.RequirePermission;
 import com.alibaba.higress.console.controller.dto.Response;
 import com.alibaba.higress.console.controller.util.ControllerUtil;
 import com.alibaba.higress.sdk.model.mcp.McpServer;
@@ -54,6 +55,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/v1/mcpServer")
 @Validated
 @Tag(name = "Mcp APIs")
+@RequirePermission(resource = "mcp_server", action = "read")
 public class McpServerController {
 
     @Resource
@@ -62,6 +64,7 @@ public class McpServerController {
     @Resource
     private McpServerHelper mcpServerHelper;
 
+    @RequirePermission(resource = "mcp_server", action = "write")
     @PostMapping("/swaggerToMcpConfig")
     @Operation(summary = "swagger to mcp config")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "swagger convert successfully"),
@@ -70,6 +73,7 @@ public class McpServerController {
         return ResponseEntity.ok(Response.success(mcpServerHelper.swaggerToMcpConfig(swaggerContent.getContent())));
     }
 
+    @RequirePermission(resource = "mcp_server", action = "write")
     @PutMapping
     @Operation(summary = "Add or update a mcp server instance")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Instances saved successfully"),
@@ -95,6 +99,7 @@ public class McpServerController {
         return ControllerUtil.buildResponseEntity(mcpServerService.query(name));
     }
 
+    @RequirePermission(resource = "mcp_server", action = "write")
     @DeleteMapping("/{name}")
     @Operation(summary = "Delete a mcp server")
     @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Route deleted successfully"),
@@ -104,6 +109,7 @@ public class McpServerController {
         return ResponseEntity.noContent().build();
     }
 
+    @RequirePermission(resource = "mcp_server", action = "write")
     @PutMapping("/consumers")
     @Operation(summary = "Add mcp server allow consumers")
     @ApiResponses(
@@ -114,6 +120,7 @@ public class McpServerController {
         return ResponseEntity.noContent().build();
     }
 
+    @RequirePermission(resource = "mcp_server", action = "write")
     @DeleteMapping("/consumers")
     @Operation(summary = "Delete mcp server allow consumers")
     @ApiResponses(

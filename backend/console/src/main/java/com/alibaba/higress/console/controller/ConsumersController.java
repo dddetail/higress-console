@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.higress.console.aop.RequirePermission;
 import com.alibaba.higress.console.controller.dto.PaginatedResponse;
 import com.alibaba.higress.console.controller.dto.Response;
 import com.alibaba.higress.console.controller.util.ControllerUtil;
@@ -46,6 +47,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/v1/consumers")
 @Validated
 @Tag(name = "Consumer APIs")
+@RequirePermission(resource = "consumer", action = "read")
 public class ConsumersController {
 
     private ConsumerService consumerService;
@@ -65,6 +67,7 @@ public class ConsumersController {
     }
 
     @PostMapping
+    @RequirePermission(resource = "consumer", action = "write")
     @Operation(summary = "Add a consumer")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Consumer added successfully"),
         @ApiResponse(responseCode = "400", description = "Consumer data is not valid"),
@@ -86,6 +89,7 @@ public class ConsumersController {
     }
 
     @PutMapping("/{name}")
+    @RequirePermission(resource = "consumer", action = "write")
     @Operation(summary = "Update an existed consumer")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Consumer updated successfully"),
         @ApiResponse(responseCode = "400", description = "Consumer data is not valid"),
@@ -103,6 +107,7 @@ public class ConsumersController {
     }
 
     @DeleteMapping("/{name}")
+    @RequirePermission(resource = "consumer", action = "write")
     @Operation(summary = "Delete a consumer")
     @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Consumer deleted successfully"),
         @ApiResponse(responseCode = "500", description = "Internal server error")})

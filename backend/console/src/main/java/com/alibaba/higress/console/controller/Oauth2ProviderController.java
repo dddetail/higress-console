@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.higress.console.controller.dto.Oauth2ProviderRequest;
+import com.alibaba.higress.console.aop.RequirePermission;
 import com.alibaba.higress.console.controller.dto.Response;
 import com.alibaba.higress.console.controller.util.ControllerUtil;
 import com.alibaba.higress.console.repository.entity.Oauth2ProviderEntity;
@@ -41,6 +42,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/v1/oauth2-providers")
 @Tag(name = "OAuth2 Provider APIs")
+@RequirePermission(resource = "oauth2_provider", action = "read")
 public class Oauth2ProviderController {
 
     @Resource
@@ -53,6 +55,7 @@ public class Oauth2ProviderController {
     }
 
     @PostMapping
+    @RequirePermission(resource = "oauth2_provider", action = "write")
     @Operation(summary = "Add an OAuth2 provider")
     public ResponseEntity<Response<Oauth2ProviderEntity>> add(
         @RequestBody Oauth2ProviderRequest request) {
@@ -62,6 +65,7 @@ public class Oauth2ProviderController {
     }
 
     @PutMapping("/{id}")
+    @RequirePermission(resource = "oauth2_provider", action = "write")
     @Operation(summary = "Update an OAuth2 provider")
     public ResponseEntity<Response<Oauth2ProviderEntity>> update(
         @PathVariable Long id, @RequestBody Oauth2ProviderRequest request) {
@@ -72,6 +76,7 @@ public class Oauth2ProviderController {
     }
 
     @DeleteMapping("/{id}")
+    @RequirePermission(resource = "oauth2_provider", action = "write")
     @Operation(summary = "Delete an OAuth2 provider")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         ssoConfigService.deleteProvider(id);
@@ -85,6 +90,7 @@ public class Oauth2ProviderController {
     }
 
     @PutMapping("/sso-status")
+    @RequirePermission(resource = "oauth2_provider", action = "write")
     @Operation(summary = "Set SSO enabled status")
     public ResponseEntity<?> setSsoStatus(@RequestBody Boolean enabled) {
         ssoConfigService.setSsoEnabled(enabled);

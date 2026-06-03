@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.higress.console.aop.RequirePermission;
 import com.alibaba.higress.console.controller.dto.PaginatedResponse;
 import com.alibaba.higress.console.controller.dto.Response;
 import com.alibaba.higress.console.controller.util.ControllerUtil;
@@ -48,6 +49,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/v1/domains")
 @Validated
 @Tag(name = "Domain APIs")
+@RequirePermission(resource = "domain", action = "read")
 public class DomainsController {
 
     @Resource
@@ -65,6 +67,7 @@ public class DomainsController {
     }
 
     @PostMapping
+    @RequirePermission(resource = "domain", action = "write")
     @Operation(summary = "Add a new domain")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Domain added successfully"),
         @ApiResponse(responseCode = "400", description = "Domain data is not valid"),
@@ -84,6 +87,7 @@ public class DomainsController {
     }
 
     @PutMapping("/{name}")
+    @RequirePermission(resource = "domain", action = "write")
     @Operation(summary = "Update an existed domain")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Domain updated successfully"),
         @ApiResponse(responseCode = "400",
@@ -101,6 +105,7 @@ public class DomainsController {
     }
 
     @DeleteMapping("/{name}")
+    @RequirePermission(resource = "domain", action = "write")
     @Operation(summary = "Delete a domain")
     @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Domain deleted successfully"),
         @ApiResponse(responseCode = "500", description = "Internal server error")})

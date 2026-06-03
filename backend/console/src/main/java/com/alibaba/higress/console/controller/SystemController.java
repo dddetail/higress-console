@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.higress.console.aop.AllowAnonymous;
 import com.alibaba.higress.console.constant.UserConfigKey;
+import com.alibaba.higress.console.aop.RequirePermission;
 import com.alibaba.higress.console.controller.dto.Response;
 import com.alibaba.higress.console.controller.dto.SystemInitRequest;
 import com.alibaba.higress.console.controller.dto.UpdateHigressConfigRequest;
@@ -53,6 +54,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/system")
 @Validated
 @Tag(name = "System APIs")
+@RequirePermission(resource = "system", action = "read")
 public class SystemController {
 
     private ConfigService configService;
@@ -69,6 +71,7 @@ public class SystemController {
     }
 
     @AllowAnonymous
+    @RequirePermission(resource = "system", action = "write")
     @PostMapping("/init")
     @Operation(summary = "Initialize")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "System initialized successfully."),
@@ -140,6 +143,7 @@ public class SystemController {
         return ResponseEntity.ok(Response.success(systemService.getHigressConfig()));
     }
 
+    @RequirePermission(resource = "system", action = "write")
     @PutMapping("/higress-config")
     @Operation(summary = "Update the content of higress-config ConfigMap")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "higress-config updated successfully."),

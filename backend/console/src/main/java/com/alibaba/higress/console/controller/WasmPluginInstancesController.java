@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.higress.console.aop.RequirePermission;
 import com.alibaba.higress.console.controller.dto.PaginatedResponse;
 import com.alibaba.higress.console.controller.dto.Response;
 import com.alibaba.higress.console.controller.util.ControllerUtil;
@@ -57,6 +58,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/v1")
 @Validated
 @Tag(name = "Wasm Plugin Instance APIs")
+@RequirePermission(resource = "plugin_instance", action = "read")
 public class WasmPluginInstancesController {
 
     private WasmPluginService wasmPluginService;
@@ -107,6 +109,7 @@ public class WasmPluginInstancesController {
         return queryInstance(WasmPluginInstanceScope.GLOBAL, null, pluginName);
     }
 
+    @RequirePermission(resource = "plugin_instance", action = "write")
     @PutMapping(value = "/global/plugin-instances/{name}")
     @Operation(summary = "Add or update a specific global plugin instance")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Instances retrieved successfully"),
@@ -116,6 +119,7 @@ public class WasmPluginInstancesController {
         return addOrUpdateInstance(WasmPluginInstanceScope.GLOBAL, null, pluginName, instance);
     }
 
+    @RequirePermission(resource = "plugin_instance", action = "write")
     @DeleteMapping(value = "/global/plugin-instances/{name}")
     @Operation(summary = "Delete a global plugin instance")
     @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Instance deleted successfully"),
@@ -144,6 +148,7 @@ public class WasmPluginInstancesController {
         return queryInstance(WasmPluginInstanceScope.DOMAIN, domainName, pluginName);
     }
 
+    @RequirePermission(resource = "plugin_instance", action = "write")
     @PutMapping(value = "/domains/{domainName}/plugin-instances/{name}")
     @Operation(summary = "Add or update a specific domain-bound plugin instance")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Instances retrieved successfully"),
@@ -155,6 +160,7 @@ public class WasmPluginInstancesController {
         return addOrUpdateInstance(WasmPluginInstanceScope.DOMAIN, domainName, pluginName, instance);
     }
 
+    @RequirePermission(resource = "plugin_instance", action = "write")
     @DeleteMapping(value = "/domains/{domainName}/plugin-instances/{name}")
     @Operation(summary = "Delete a domain-bound plugin instance")
     @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Instance deleted successfully"),
@@ -184,6 +190,7 @@ public class WasmPluginInstancesController {
         return queryInstance(WasmPluginInstanceScope.ROUTE, routeName, pluginName);
     }
 
+    @RequirePermission(resource = "plugin_instance", action = "write")
     @PutMapping(value = "/routes/{routeName}/plugin-instances/{name}")
     @Operation(summary = "Add or update a specific route-bound plugin instance")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Instances retrieved successfully"),
@@ -195,6 +202,7 @@ public class WasmPluginInstancesController {
         return addOrUpdateInstance(WasmPluginInstanceScope.ROUTE, routeName, pluginName, instance);
     }
 
+    @RequirePermission(resource = "plugin_instance", action = "write")
     @DeleteMapping(value = "/routes/{routeName}/plugin-instances/{name}")
     @Operation(summary = "Delete a route-bound plugin instance")
     @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Instance deleted successfully"),
@@ -224,6 +232,7 @@ public class WasmPluginInstancesController {
         return queryInstance(WasmPluginInstanceScope.SERVICE, serviceName, pluginName);
     }
 
+    @RequirePermission(resource = "plugin_instance", action = "write")
     @PutMapping(value = "/services/{serviceName}/plugin-instances/{name}")
     @Operation(summary = "Add or update a specific service-bound plugin instance")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Instances retrieved successfully"),
@@ -235,6 +244,7 @@ public class WasmPluginInstancesController {
         return addOrUpdateInstance(WasmPluginInstanceScope.SERVICE, serviceName, pluginName, instance);
     }
 
+    @RequirePermission(resource = "plugin_instance", action = "write")
     @DeleteMapping(value = "/services/{serviceName}/plugin-instances/{name}")
     @Operation(summary = "Delete a service-bound plugin instance")
     @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Instance deleted successfully"),

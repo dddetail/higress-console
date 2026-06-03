@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.higress.console.aop.RequirePermission;
 import com.alibaba.higress.console.controller.dto.PaginatedResponse;
 import com.alibaba.higress.console.controller.dto.Response;
 import com.alibaba.higress.console.controller.util.ControllerUtil;
@@ -46,6 +47,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/v1/routes")
 @Validated
 @Tag(name = "Route APIs")
+@RequirePermission(resource = "route", action = "read")
 public class RoutesController {
 
     @Resource
@@ -70,6 +72,7 @@ public class RoutesController {
 
     @PostMapping
     @Operation(summary = "Add a new route")
+    @RequirePermission(resource = "route", action = "write")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Route added successfully"),
         @ApiResponse(responseCode = "400", description = "Route data is not valid"),
         @ApiResponse(responseCode = "409", description = "Route already existed with the same name."),
@@ -87,6 +90,7 @@ public class RoutesController {
 
     @PutMapping("/{name}")
     @Operation(summary = "Update an existed route")
+    @RequirePermission(resource = "route", action = "write")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Route updated successfully"),
         @ApiResponse(responseCode = "400",
             description = "Route data is not valid or route name in the URL doesn't match the one in the body."),
@@ -108,6 +112,7 @@ public class RoutesController {
 
     @DeleteMapping("/{name}")
     @Operation(summary = "Delete a route")
+    @RequirePermission(resource = "route", action = "write")
     @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Route deleted successfully"),
         @ApiResponse(responseCode = "400", description = "Deleting an internal route is not allowed."),
         @ApiResponse(responseCode = "500", description = "Internal server error")})

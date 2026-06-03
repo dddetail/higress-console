@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.higress.console.aop.RequirePermission;
 import com.alibaba.higress.console.controller.dto.Response;
 import com.alibaba.higress.console.model.DashboardInfo;
 import com.alibaba.higress.console.model.DashboardType;
@@ -44,6 +45,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/dashboard")
 @Validated
 @Tag(name = "Dashboard APIs")
+@RequirePermission(resource = "dashboard", action = "read")
 public class DashboardController {
 
     private DashboardService dashboardService;
