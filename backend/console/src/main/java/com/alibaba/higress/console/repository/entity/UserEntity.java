@@ -53,6 +53,9 @@ public class UserEntity {
     @Column(nullable = false, length = 16)
     private String status;
 
+    @Column(nullable = false, length = 32)
+    private String role;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 

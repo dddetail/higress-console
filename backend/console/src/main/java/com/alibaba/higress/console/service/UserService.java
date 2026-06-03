@@ -30,4 +30,6 @@ public interface UserService {
     void deleteUser(String username);
 
     User findByUsername(String username);
+
+    User updateUserRole(String username, String role);
 }

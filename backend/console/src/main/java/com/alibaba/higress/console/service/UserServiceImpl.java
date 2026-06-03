@@ -70,6 +70,15 @@ public class UserServiceImpl implements UserService {
             .orElse(null);
     }
 
+    @Override
+    public User updateUserRole(String username, String role) {
+        UserEntity entity = userRepository.findByUsername(username)
+            .orElseThrow(() -> new NotFoundException("User not found: " + username));
+        entity.setRole(role);
+        userRepository.save(entity);
+        return toModel(entity);
+    }
+
     private User toModel(UserEntity entity) {
         return User.builder()
             .name(entity.getUsername())
@@ -77,6 +86,7 @@ public class UserServiceImpl implements UserService {
             .employeeId(entity.getEmployeeId())
             .type(entity.getType())
             .status(entity.getStatus())
+            .role(entity.getRole())
             .build();
     }
 }

@@ -28,8 +28,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.higress.console.aop.RequirePermission;
 import com.alibaba.higress.console.controller.dto.ChangePasswordRequest;
 import com.alibaba.higress.console.controller.dto.Response;
+import com.alibaba.higress.console.controller.dto.UserRoleRequest;
 import com.alibaba.higress.console.controller.dto.UserStatusRequest;
 import com.alibaba.higress.console.controller.util.ControllerUtil;
 import com.alibaba.higress.console.model.User;
@@ -92,6 +94,7 @@ public class UserController {
     @Operation(summary = "List all users")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Users listed successfully."),
         @ApiResponse(responseCode = "500", description = "Internal server error")})
+    @RequirePermission(resource = "user", action = "read")
     public ResponseEntity<Response<List<User>>> listUsers() {
         return ResponseEntity.ok(Response.success(userService.listUsers()));
     }
@@ -101,6 +104,7 @@ public class UserController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "User found."),
         @ApiResponse(responseCode = "404", description = "User not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")})
+    @RequirePermission(resource = "user", action = "read")
     public ResponseEntity<Response<User>> getUser(@PathVariable String username) {
         return ControllerUtil.buildResponseEntity(userService.getUser(username));
     }
@@ -110,10 +114,23 @@ public class UserController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "User status updated."),
         @ApiResponse(responseCode = "404", description = "User not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")})
+    @RequirePermission(resource = "user", action = "write")
     public ResponseEntity<Response<User>> updateUserStatus(@PathVariable String username,
         @RequestBody UserStatusRequest request) {
         return ControllerUtil.buildResponseEntity(
             userService.updateUserStatus(username, request.getStatus()));
+    }
+
+    @PutMapping("/{username}/role")
+    @Operation(summary = "Assign user role")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "User role updated."),
+        @ApiResponse(responseCode = "404", description = "User not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")})
+    @RequirePermission(resource = "user", action = "write")
+    public ResponseEntity<Response<User>> updateUserRole(@PathVariable String username,
+        @RequestBody UserRoleRequest request) {
+        return ControllerUtil.buildResponseEntity(
+            userService.updateUserRole(username, request.getRole()));
     }
 
     @DeleteMapping("/{username}")
@@ -121,6 +138,7 @@ public class UserController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "User deleted."),
         @ApiResponse(responseCode = "404", description = "User not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")})
+    @RequirePermission(resource = "user", action = "write")
     public ResponseEntity<?> deleteUser(@PathVariable String username) {
         userService.deleteUser(username);
         return ControllerUtil.buildSuccessResponseEntity();

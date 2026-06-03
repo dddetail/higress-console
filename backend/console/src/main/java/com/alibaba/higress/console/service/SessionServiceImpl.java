@@ -226,7 +226,16 @@ public class SessionServiceImpl implements SessionService {
             return null;
         }
         String username = segments[1];
-        return User.builder().name(username).type("consumer_user").status("active").build();
+        User oauth2User = User.builder().name(username).type("consumer_user").status("active").build();
+        try {
+            User dbUser = com.alibaba.higress.console.util.SpringContextUtil.getBean(UserService.class).findByUsername(username);
+            if (dbUser != null) {
+                oauth2User.setRole(dbUser.getRole());
+            }
+        } catch (Exception e) {
+            log.warn("查询用户角色失败：{}", username, e);
+        }
+        return oauth2User;
     }
 
     @Override
