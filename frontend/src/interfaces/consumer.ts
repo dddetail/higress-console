@@ -25,3 +25,27 @@ export enum KeyAuthCredentialSource {
   HEADER = 'HEADER',
   QUERY = 'QUERY',
 }
+
+/**
+ * Consumer detail DTO merging gateway data + console management data + member list.
+ */
+export interface ConsumerDetail extends Consumer {
+  nameCn?: string;
+  nameEn?: string;
+  shortName?: string;
+  description?: string;
+  infoStatus?: string;
+  members?: string[];
+}
+
+/**
+ * Request body for creating/updating a consumer with management fields.
+ */
+export interface ConsumerCreateRequest {
+  name: string;
+  credentials: Credential[];
+  nameCn: string;
+  nameEn: string;
+  shortName: string;
+  description?: string;
+}

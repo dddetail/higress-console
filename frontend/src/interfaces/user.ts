@@ -40,27 +40,3 @@ export interface UserListItem {
   status: string;
   role?: string;
 }
-
-export interface ConsumerGroup {
-  id: number;
-  nameCn: string;
-  nameEn: string;
-  shortName: string;
-  description?: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ConsumerGroupMember {
-  id: number;
-  groupId: number;
-  username: string;
-}
-
-export interface ConsumerGroupApiGrant {
-  id: number;
-  groupId: number;
-  resourceType: string;
-  resourceName: string;
-}
