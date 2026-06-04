@@ -13,6 +13,8 @@
 package com.alibaba.higress.console.controller;
 
 import java.net.URLEncoder;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.higress.console.aop.AllowAnonymous;
+import com.alibaba.higress.console.controller.dto.Oauth2ProviderVO;
 import com.alibaba.higress.console.controller.dto.Response;
 import com.alibaba.higress.console.model.User;
 import com.alibaba.higress.console.service.Oauth2Service;
@@ -65,7 +68,10 @@ public class Oauth2Controller {
         if (!ssoConfigService.isSsoEnabled()) {
             return ResponseEntity.ok(Response.success(null));
         }
-        return ResponseEntity.ok(Response.success(oauth2Service.getEnabledProviders()));
+        List<Oauth2ProviderVO> providers = oauth2Service.getEnabledProviders().stream()
+            .map(Oauth2ProviderVO::fromEntity)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(Response.success(providers));
     }
 
     @GetMapping("/authorization/{provider}")

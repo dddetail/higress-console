@@ -18,6 +18,12 @@ export interface ChangePasswordParams {
 }
 
 export interface Oauth2Provider {
+  name: string;
+  providerKey: string;
+  iconUrl: string;
+}
+
+export interface Oauth2ProviderDetail {
   id: number;
   name: string;
   providerKey: string;
@@ -26,7 +32,6 @@ export interface Oauth2Provider {
   userInfoUrl: string;
   scope: string;
   clientId: string;
-  clientSecret: string;
   iconUrl: string;
   enabled: boolean;
   isPreset: boolean;

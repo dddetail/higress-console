@@ -1,6 +1,6 @@
 import CodeEditor, { CodeEditorRef } from '@/components/CodeEditor';
 import { Mode } from '@/interfaces/config';
-import type { Oauth2Provider } from '@/interfaces/user';
+import type { Oauth2ProviderDetailDetail } from '@/interfaces/user';
 import { getHigressConfig, updateHigressConfig } from '@/services/system';
 import {
   addProvider,
@@ -75,9 +75,9 @@ const SystemSettings: React.FC = () => {
 
   // ===== SSO Config Tab =====
   const [ssoEnabled, setSsoEnabledState] = useState<boolean>(false);
-  const [providers, setProviders] = useState<Oauth2Provider[]>([]);
+  const [providers, setProviders] = useState<Oauth2ProviderDetail[]>([]);
   const [drawerVisible, setDrawerVisible] = useState<boolean>(false);
-  const [editingProvider, setEditingProvider] = useState<Oauth2Provider | null>(null);
+  const [editingProvider, setEditingProvider] = useState<Oauth2ProviderDetail | null>(null);
   const [providerForm] = Form.useForm();
   const [presetKey, setPresetKey] = useState<string>('');
 
@@ -113,7 +113,7 @@ const SystemSettings: React.FC = () => {
     setDrawerVisible(true);
   };
 
-  const handleEditProvider = (record: Oauth2Provider) => {
+  const handleEditProvider = (record: Oauth2ProviderDetail) => {
     setEditingProvider(record);
     setPresetKey(record.isPreset ? record.providerKey : '');
     providerForm.setFieldsValue({
@@ -194,7 +194,7 @@ const SystemSettings: React.FC = () => {
     {
       title: t('userManagement.actions'),
       key: 'actions',
-      render: (_: any, record: Oauth2Provider) => (
+      render: (_: any, record: Oauth2ProviderDetail) => (
         <Space>
           <a onClick={() => handleEditProvider(record)}>{t('sso.editProvider')}</a>
           <Popconfirm

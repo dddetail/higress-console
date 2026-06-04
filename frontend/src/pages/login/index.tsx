@@ -80,7 +80,8 @@ const Login: React.FC = () => {
   }
 
   function handleSsoLogin(providerKey: string) {
-    window.location.href = `/api/oauth2/authorization/${providerKey}`;
+    const prefix = process.env.ICE_CORE_MODE === "development" ? "/api" : "";
+    window.location.href = `${prefix}/oauth2/authorization/${providerKey}`;
   }
 
   return (
