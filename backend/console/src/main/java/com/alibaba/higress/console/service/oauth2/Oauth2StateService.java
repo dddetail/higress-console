@@ -32,7 +32,7 @@ public class Oauth2StateService {
     private static final long STATE_TTL_MINUTES = 10L;
     private static final int CLEANER_POOL_SIZE = 1;
 
-    private final ConcurrentHashMap<String, Long> stateStore = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, StateEntry> stateStore = new ConcurrentHashMap<>();
 
     private final ScheduledExecutorService cleaner =
         new ScheduledThreadPoolExecutor(CLEANER_POOL_SIZE,
@@ -48,7 +48,7 @@ public class Oauth2StateService {
 
     public String generateState(String providerKey) {
         String state = UUID.randomUUID().toString().replace("-", "");
-        stateStore.put(state, System.currentTimeMillis());
+        stateStore.put(state, new StateEntry(System.currentTimeMillis(), providerKey));
         return state;
     }
 
@@ -56,15 +56,25 @@ public class Oauth2StateService {
         if (state == null || state.isEmpty()) {
             return false;
         }
-        Long timestamp = stateStore.remove(state);
-        if (timestamp == null) {
+        StateEntry entry = stateStore.remove(state);
+        if (entry == null) {
             return false;
         }
-        return System.currentTimeMillis() - timestamp < STATE_TTL_MINUTES * 60L * 1000L;
+        return System.currentTimeMillis() - entry.timestamp < STATE_TTL_MINUTES * 60L * 1000L;
     }
 
     private void cleanExpired() {
         long now = System.currentTimeMillis();
-        stateStore.entrySet().removeIf(e -> now - e.getValue() > STATE_TTL_MINUTES * 60L * 1000L);
+        stateStore.entrySet().removeIf(e -> now - e.getValue().timestamp > STATE_TTL_MINUTES * 60L * 1000L);
+    }
+
+    private static class StateEntry {
+        final long timestamp;
+        final String providerKey;
+
+        StateEntry(long timestamp, String providerKey) {
+            this.timestamp = timestamp;
+            this.providerKey = providerKey;
+        }
     }
 }

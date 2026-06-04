@@ -78,6 +78,7 @@ public class SessionServiceImpl implements SessionService {
 
     private ConfigService configService;
     private KubernetesClientService kubernetesClientService;
+    private UserService userService;
 
     private final AtomicReference<AdminConfig> adminConfigCache = new AtomicReference<>();
 
@@ -89,6 +90,11 @@ public class SessionServiceImpl implements SessionService {
     @Resource
     public void setKubernetesClientService(KubernetesClientService kubernetesClientService) {
         this.kubernetesClientService = kubernetesClientService;
+    }
+
+    @Resource
+    public void setUserService(UserService userService) {
+        this.userService = userService;
     }
 
     @Override
@@ -226,14 +232,26 @@ public class SessionServiceImpl implements SessionService {
             return null;
         }
         String username = segments[1];
+        try {
+            long timestamp = Long.parseLong(segments[2]);
+            if (System.currentTimeMillis() - timestamp > cookieMaxAge * 1000L) {
+                log.info("OAuth2 session expired for user: {}", username);
+                return null;
+            }
+        } catch (NumberFormatException e) {
+            log.warn("Invalid timestamp in OAuth2 token for user: {}", username);
+            return null;
+        }
+
         User oauth2User = User.builder().name(username).type("consumer_user").status("active").build();
         try {
-            User dbUser = com.alibaba.higress.console.util.SpringContextUtil.getBean(UserService.class).findByUsername(username);
+            User dbUser = userService.findByUsername(username);
             if (dbUser != null) {
                 oauth2User.setRole(dbUser.getRole());
+                oauth2User.setDisplayName(dbUser.getDisplayName());
             }
         } catch (Exception e) {
-            log.warn("Failed to query user role for: {}", username, e);
+            log.warn("Failed to query user info for: {}", username, e);
         }
         return oauth2User;
     }

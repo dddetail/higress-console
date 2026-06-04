@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+import javax.annotation.PreDestroy;
+
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -41,6 +43,20 @@ public class Oauth2Client {
 
     private static final String GRANT_TYPE_AUTHORIZATION_CODE = "authorization_code";
     private static final String GRANT_TYPE_REFRESH_TOKEN = "refresh_token";
+
+    private final CloseableHttpClient httpClient;
+
+    public Oauth2Client() {
+        this.httpClient = HttpClients.custom()
+            .setMaxConnTotal(20)
+            .setMaxConnPerRoute(5)
+            .build();
+    }
+
+    @PreDestroy
+    public void destroy() throws IOException {
+        httpClient.close();
+    }
 
     public TokenResponse exchangeToken(String tokenUrl, String clientId, String clientSecret,
         String code, String redirectUri) {
@@ -69,8 +85,7 @@ public class Oauth2Client {
         post.setHeader(HttpHeaders.ACCEPT, "application/json");
         post.setEntity(new StringEntity(body.toJSONString(), StandardCharsets.UTF_8));
 
-        try (CloseableHttpClient httpClient = HttpClients.createDefault();
-             CloseableHttpResponse response = httpClient.execute(post)) {
+        try (CloseableHttpResponse response = httpClient.execute(post)) {
             String responseBody = EntityUtils.toString(response.getEntity());
             if (response.getStatusLine().getStatusCode() != 200) {
                 throw new BusinessException("Token request failed: " + responseBody);
@@ -94,8 +109,7 @@ public class Oauth2Client {
         get.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
         get.setHeader(HttpHeaders.ACCEPT, "application/json");
 
-        try (CloseableHttpClient httpClient = HttpClients.createDefault();
-             CloseableHttpResponse response = httpClient.execute(get)) {
+        try (CloseableHttpResponse response = httpClient.execute(get)) {
             String responseBody = EntityUtils.toString(response.getEntity());
             if (response.getStatusLine().getStatusCode() != 200) {
                 throw new BusinessException("Failed to fetch user info: " + responseBody);

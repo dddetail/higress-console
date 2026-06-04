@@ -21,6 +21,7 @@ import java.util.Map;
 import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.higress.console.model.User;
 import com.alibaba.higress.console.repository.Oauth2AccountRepository;
@@ -31,6 +32,7 @@ import com.alibaba.higress.console.repository.entity.Oauth2ProviderEntity;
 import com.alibaba.higress.console.repository.entity.UserEntity;
 import com.alibaba.higress.console.service.oauth2.Oauth2Client;
 import com.alibaba.higress.console.service.oauth2.Oauth2StateService;
+import com.alibaba.higress.console.service.oauth2.TokenEncryptor;
 import com.alibaba.higress.console.service.oauth2.UserInfoMapper;
 import com.alibaba.higress.sdk.exception.BusinessException;
 
@@ -61,6 +63,9 @@ public class Oauth2ServiceImpl implements Oauth2Service {
     @Resource
     private UserInfoMapper userInfoMapper;
 
+    @Resource
+    private TokenEncryptor tokenEncryptor;
+
     @Override
     public String buildAuthorizationUrl(String providerKey, String redirectUri) {
         Oauth2ProviderEntity provider = providerRepository.findByProviderKey(providerKey)
@@ -76,11 +81,13 @@ public class Oauth2ServiceImpl implements Oauth2Service {
         return provider.getAuthorizationUrl()
             + "?client_id=" + urlEncode(provider.getClientId())
             + "&redirect_uri=" + urlEncode(redirectUri)
+            + "&response_type=code"
             + "&scope=" + urlEncode(scope)
             + "&state=" + state;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public User handleCallback(String providerKey, String code, String state, String redirectUri) {
         if (!stateService.validateAndConsumeState(state)) {
             throw new BusinessException("Invalid or expired OAuth2 state parameter.");
@@ -99,10 +106,10 @@ public class Oauth2ServiceImpl implements Oauth2Service {
             provider.getUserInfoUrl(), tokenResponse.getAccessToken());
 
         // Map provider user info to normalized fields
-        String[] mapped = userInfoMapper.map(providerKey, providerUserInfo);
-        String providerUserId = mapped[0];
-        String providerUsername = mapped[1];
-        String displayName = mapped[2];
+        UserInfoMapper.MappedUserInfo mapped = userInfoMapper.map(providerKey, providerUserInfo);
+        String providerUserId = mapped.getProviderUserId();
+        String providerUsername = mapped.getProviderUsername();
+        String displayName = mapped.getDisplayName();
 
         // Generate a local username based on provider
         String localUsername = providerKey + "_" + providerUserId;
@@ -145,9 +152,9 @@ public class Oauth2ServiceImpl implements Oauth2Service {
                 .createdAt(now)
                 .updatedAt(now)
                 .build());
-        accountEntity.setAccessToken(tokenResponse.getAccessToken());
+        accountEntity.setAccessToken(tokenEncryptor.encrypt(tokenResponse.getAccessToken()));
         if (tokenResponse.getRefreshToken() != null) {
-            accountEntity.setRefreshToken(tokenResponse.getRefreshToken());
+            accountEntity.setRefreshToken(tokenEncryptor.encrypt(tokenResponse.getRefreshToken()));
         }
         if (tokenResponse.getExpiresIn() != null) {
             accountEntity.setTokenExpiresAt(now.plusSeconds(tokenResponse.getExpiresIn()));

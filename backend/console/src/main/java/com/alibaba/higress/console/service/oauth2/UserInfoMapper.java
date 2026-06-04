@@ -16,18 +16,32 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 /**
  * @author Higress
  */
 @Component
 public class UserInfoMapper {
 
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MappedUserInfo {
+        private String providerUserId;
+        private String providerUsername;
+        private String displayName;
+        private String email;
+    }
+
     /**
      * Maps provider-specific user info response to a normalized structure.
-     *
-     * @return an array: [providerUserId, providerUsername, displayName, email]
      */
-    public String[] map(String providerKey, Map<String, Object> userInfo) {
+    public MappedUserInfo map(String providerKey, Map<String, Object> userInfo) {
         switch (providerKey) {
             case "github":
                 return mapGithub(userInfo);
@@ -38,21 +52,29 @@ public class UserInfoMapper {
         }
     }
 
-    private String[] mapGithub(Map<String, Object> info) {
+    private MappedUserInfo mapGithub(Map<String, Object> info) {
         String id = String.valueOf(info.get("id"));
         String login = (String)info.get("login");
         String name = (String)info.get("name");
-        return new String[] {id, login, name != null ? name : login, null};
+        return MappedUserInfo.builder()
+            .providerUserId(id)
+            .providerUsername(login)
+            .displayName(name != null ? name : login)
+            .build();
     }
 
-    private String[] mapGitlab(Map<String, Object> info) {
+    private MappedUserInfo mapGitlab(Map<String, Object> info) {
         String id = String.valueOf(info.get("id"));
         String username = (String)info.get("username");
         String name = (String)info.get("name");
-        return new String[] {id, username, name != null ? name : username, null};
+        return MappedUserInfo.builder()
+            .providerUserId(id)
+            .providerUsername(username)
+            .displayName(name != null ? name : username)
+            .build();
     }
 
-    private String[] mapGeneric(Map<String, Object> info) {
+    private MappedUserInfo mapGeneric(Map<String, Object> info) {
         Object id = info.get("id");
         if (id == null) {
             id = info.get("sub");
@@ -60,6 +82,10 @@ public class UserInfoMapper {
         String userId = id != null ? String.valueOf(id) : "";
         String username = (String)info.getOrDefault("username", userId);
         String name = (String)info.getOrDefault("name", username);
-        return new String[] {userId, username, name, null};
+        return MappedUserInfo.builder()
+            .providerUserId(userId)
+            .providerUsername(username)
+            .displayName(name)
+            .build();
     }
 }

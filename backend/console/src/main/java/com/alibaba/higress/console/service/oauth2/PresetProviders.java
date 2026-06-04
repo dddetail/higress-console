@@ -49,11 +49,29 @@ public final class PresetProviders {
     }
 
     public static Oauth2ProviderEntity getPreset(String providerKey) {
-        return PRESETS.get(providerKey);
+        Oauth2ProviderEntity preset = PRESETS.get(providerKey);
+        return preset != null ? cloneEntity(preset) : null;
     }
 
     public static Map<String, Oauth2ProviderEntity> allPresets() {
-        return new HashMap<>(PRESETS);
+        Map<String, Oauth2ProviderEntity> result = new HashMap<>(PRESETS.size());
+        PRESETS.forEach((key, value) -> result.put(key, cloneEntity(value)));
+        return result;
+    }
+
+    private static Oauth2ProviderEntity cloneEntity(Oauth2ProviderEntity source) {
+        Oauth2ProviderEntity clone = new Oauth2ProviderEntity();
+        clone.setName(source.getName());
+        clone.setProviderKey(source.getProviderKey());
+        clone.setAuthorizationUrl(source.getAuthorizationUrl());
+        clone.setTokenUrl(source.getTokenUrl());
+        clone.setUserInfoUrl(source.getUserInfoUrl());
+        clone.setScope(source.getScope());
+        clone.setClientId(source.getClientId());
+        clone.setClientSecret(source.getClientSecret());
+        clone.setIconUrl(source.getIconUrl());
+        clone.setIsPreset(source.getIsPreset());
+        return clone;
     }
 
     private PresetProviders() {}

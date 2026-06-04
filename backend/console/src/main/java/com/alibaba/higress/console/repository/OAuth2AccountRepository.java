@@ -24,4 +24,6 @@ public interface Oauth2AccountRepository extends JpaRepository<Oauth2AccountEnti
     Optional<Oauth2AccountEntity> findByProviderAndProviderUserId(String provider, String providerUserId);
 
     List<Oauth2AccountEntity> findByUsername(String username);
+
+    long deleteByProvider(String provider);
 }

@@ -2,7 +2,8 @@ import type { Oauth2Provider } from '@/interfaces/user';
 import request from './request';
 
 export async function getEnabledProviders(): Promise<Oauth2Provider[]> {
-  return await request.get('/oauth2/providers');
+  const data = await request.get('/oauth2/providers');
+  return data || [];
 }
 
 export async function listProviders(): Promise<Oauth2Provider[]> {

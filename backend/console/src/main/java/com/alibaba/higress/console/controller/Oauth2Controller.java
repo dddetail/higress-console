@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -55,6 +56,9 @@ public class Oauth2Controller {
 
     @Resource
     private SessionService sessionService;
+
+    @Value("${higress-console.oauth2.redirect-base-url:}")
+    private String redirectBaseUrl;
 
     @GetMapping("/providers")
     public ResponseEntity<Response<?>> listEnabledProviders() {
@@ -102,7 +106,7 @@ public class Oauth2Controller {
             String redirectUri = buildRedirectUri(request, providerKey);
             User user = oauth2Service.handleCallback(providerKey, code, state, redirectUri);
             sessionService.saveOauth2Session(response, user);
-            response.sendRedirect("/");
+            sendSuccessRedirect(response);
         } catch (Exception e) {
             log.error("OAuth2 callback failed for provider {}", providerKey, e);
             redirectToLoginWithError(response, e.getMessage());
@@ -121,10 +125,22 @@ public class Oauth2Controller {
         return sb.toString();
     }
 
+    private void sendSuccessRedirect(HttpServletResponse response) {
+        try {
+            String target = StringUtils.isNotEmpty(redirectBaseUrl) ? redirectBaseUrl : "/";
+            response.sendRedirect(target);
+        } catch (Exception e) {
+            throw new BusinessException("Failed to redirect after login", e);
+        }
+    }
+
     private void redirectToLoginWithError(HttpServletResponse response, String error) {
         try {
             String encodedError = URLEncoder.encode(error, "UTF-8");
-            response.sendRedirect("/login?oauth_error=" + encodedError);
+            String loginPath = "/login?oauth_error=" + encodedError;
+            String target = StringUtils.isNotEmpty(redirectBaseUrl)
+                ? redirectBaseUrl + loginPath : loginPath;
+            response.sendRedirect(target);
         } catch (Exception e) {
             throw new BusinessException("Failed to redirect", e);
         }
