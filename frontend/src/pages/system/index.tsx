@@ -68,8 +68,8 @@ const SystemSettings: React.FC = () => {
       setConfigYaml(updatedConfigYaml);
       codeEditorRef.current?.pushContent(updatedConfigYaml);
       message.success(t('plugins.saveSuccess'));
-    } catch (errInfo) {
-      console.log('Update higress-config failed.', errInfo);
+    } catch (_errInfo) {
+      // Update higress-config failed
     }
   };
 
@@ -188,8 +188,9 @@ const SystemSettings: React.FC = () => {
       title: t('sso.enabledStatus'),
       dataIndex: 'enabled',
       key: 'enabled',
-      render: (val: boolean) =>
-        val ? <Tag color="green">{t('sso.enabledStatus')}</Tag> : <Tag>{t('sso.disabledStatus')}</Tag>,
+      render: (val: boolean) => (
+        val ? <Tag color="green">{t('sso.enabledStatus')}</Tag> : <Tag>{t('sso.disabledStatus')}</Tag>
+      ),
     },
     {
       title: t('userManagement.actions'),
