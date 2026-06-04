@@ -38,7 +38,6 @@ import com.alibaba.higress.console.controller.util.ControllerUtil;
 import com.alibaba.higress.console.model.ConsumerDetail;
 import com.alibaba.higress.console.service.ConsumerInfoService;
 import com.alibaba.higress.sdk.model.consumer.Consumer;
-import com.alibaba.higress.sdk.service.consumer.ConsumerService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -52,14 +51,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequirePermission(resource = "consumer", action = "read")
 public class ConsumersController {
 
-    private ConsumerService consumerService;
-
     private ConsumerInfoService consumerInfoService;
-
-    @Resource
-    public void setConsumerService(ConsumerService consumerService) {
-        this.consumerService = consumerService;
-    }
 
     @Resource
     public void setConsumerInfoService(ConsumerInfoService consumerInfoService) {

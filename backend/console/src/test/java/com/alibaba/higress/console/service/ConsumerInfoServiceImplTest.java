@@ -126,14 +126,15 @@ class ConsumerInfoServiceImplTest {
         }
 
         @Test
-        @DisplayName("merges gateway consumer with console info and members")
+        @DisplayName("merges gateway consumer with console info and members via batch query")
         void mergesGatewayWithConsoleAndMembers() {
             when(consumerService.list(any(CommonPageQuery.class)))
                 .thenReturn(PaginatedResult.createFromFullList(
                     Collections.singletonList(gatewayConsumer), null));
-            when(consumerInfoRepository.findByConsumerName("test-group"))
-                .thenReturn(Optional.of(consumerInfoEntity));
-            when(consumerMemberRepository.findByConsumerName("test-group"))
+            // Batch query returns all info and members at once
+            when(consumerInfoRepository.findByConsumerNameIn(Collections.singletonList("test-group")))
+                .thenReturn(Collections.singletonList(consumerInfoEntity));
+            when(consumerMemberRepository.findByConsumerNameIn(Collections.singletonList("test-group")))
                 .thenReturn(Collections.singletonList(memberEntity));
 
             List<ConsumerDetail> result = consumerInfoService.listConsumers();
@@ -154,9 +155,9 @@ class ConsumerInfoServiceImplTest {
             when(consumerService.list(any(CommonPageQuery.class)))
                 .thenReturn(PaginatedResult.createFromFullList(
                     Collections.singletonList(gatewayConsumer), null));
-            when(consumerInfoRepository.findByConsumerName("test-group"))
-                .thenReturn(Optional.empty());
-            when(consumerMemberRepository.findByConsumerName("test-group"))
+            when(consumerInfoRepository.findByConsumerNameIn(Collections.singletonList("test-group")))
+                .thenReturn(Collections.emptyList());
+            when(consumerMemberRepository.findByConsumerNameIn(Collections.singletonList("test-group")))
                 .thenReturn(Collections.emptyList());
 
             List<ConsumerDetail> result = consumerInfoService.listConsumers();
@@ -168,6 +169,94 @@ class ConsumerInfoServiceImplTest {
             assertEquals(null, detail.getNameCn());
             assertEquals(null, detail.getShortName());
             assertTrue(detail.getMembers().isEmpty());
+        }
+
+        @Test
+        @DisplayName("uses batch query instead of per-consumer queries")
+        void usesBatchQueryNotPerConsumer() {
+            when(consumerService.list(any(CommonPageQuery.class)))
+                .thenReturn(PaginatedResult.createFromFullList(
+                    Collections.singletonList(gatewayConsumer), null));
+            when(consumerInfoRepository.findByConsumerNameIn(any()))
+                .thenReturn(Collections.singletonList(consumerInfoEntity));
+            when(consumerMemberRepository.findByConsumerNameIn(any()))
+                .thenReturn(Collections.singletonList(memberEntity));
+
+            consumerInfoService.listConsumers();
+
+            // Verify batch methods were called
+            verify(consumerInfoRepository).findByConsumerNameIn(any());
+            verify(consumerMemberRepository).findByConsumerNameIn(any());
+            // Verify per-consumer methods were NOT called for list
+            verify(consumerInfoRepository, never()).findByConsumerName(anyString());
+            verify(consumerMemberRepository, never()).findByConsumerName(anyString());
+        }
+
+        @Test
+        @DisplayName("correctly merges multiple consumers with mixed info and members")
+        void mergesMultipleConsumers() {
+            Consumer consumer2 = Consumer.builder()
+                .name("group-2")
+                .credentials(Collections.emptyList())
+                .build();
+            ConsumerInfoEntity info2 = ConsumerInfoEntity.builder()
+                .consumerName("group-2")
+                .nameCn("Group 2 CN")
+                .nameEn("Group 2 EN")
+                .shortName("g2")
+                .description("Second group")
+                .status("active")
+                .build();
+            ConsumerMemberEntity member2 = ConsumerMemberEntity.builder()
+                .consumerName("group-2")
+                .username("user2")
+                .build();
+
+            when(consumerService.list(any(CommonPageQuery.class)))
+                .thenReturn(PaginatedResult.createFromFullList(
+                    Arrays.asList(gatewayConsumer, consumer2), null));
+            when(consumerInfoRepository.findByConsumerNameIn(any()))
+                .thenReturn(Arrays.asList(consumerInfoEntity, info2));
+            when(consumerMemberRepository.findByConsumerNameIn(any()))
+                .thenReturn(Arrays.asList(memberEntity, member2));
+
+            List<ConsumerDetail> result = consumerInfoService.listConsumers();
+
+            assertEquals(2, result.size());
+            // First consumer
+            assertEquals("test-group", result.get(0).getName());
+            assertEquals("Test Group CN", result.get(0).getNameCn());
+            assertEquals(1, result.get(0).getMembers().size());
+            assertEquals("user1", result.get(0).getMembers().get(0));
+            // Second consumer
+            assertEquals("group-2", result.get(1).getName());
+            assertEquals("Group 2 CN", result.get(1).getNameCn());
+            assertEquals(1, result.get(1).getMembers().size());
+            assertEquals("user2", result.get(1).getMembers().get(0));
+        }
+
+        @Test
+        @DisplayName("handles multiple members per consumer correctly")
+        void handlesMultipleMembersPerConsumer() {
+            ConsumerMemberEntity member2 = ConsumerMemberEntity.builder()
+                .consumerName("test-group")
+                .username("user2")
+                .build();
+
+            when(consumerService.list(any(CommonPageQuery.class)))
+                .thenReturn(PaginatedResult.createFromFullList(
+                    Collections.singletonList(gatewayConsumer), null));
+            when(consumerInfoRepository.findByConsumerNameIn(any()))
+                .thenReturn(Collections.singletonList(consumerInfoEntity));
+            when(consumerMemberRepository.findByConsumerNameIn(any()))
+                .thenReturn(Arrays.asList(memberEntity, member2));
+
+            List<ConsumerDetail> result = consumerInfoService.listConsumers();
+
+            assertEquals(1, result.size());
+            assertEquals(2, result.get(0).getMembers().size());
+            assertTrue(result.get(0).getMembers().contains("user1"));
+            assertTrue(result.get(0).getMembers().contains("user2"));
         }
     }
 
@@ -216,6 +305,8 @@ class ConsumerInfoServiceImplTest {
             when(consumerService.addOrUpdate(any(Consumer.class))).thenReturn(gatewayConsumer);
             when(consumerInfoRepository.save(any(ConsumerInfoEntity.class)))
                 .thenReturn(consumerInfoEntity);
+            when(consumerInfoRepository.findByConsumerName("test-group"))
+                .thenReturn(Optional.of(consumerInfoEntity));
             when(consumerMemberRepository.findByConsumerName("test-group"))
                 .thenReturn(Collections.emptyList());
 
@@ -232,6 +323,8 @@ class ConsumerInfoServiceImplTest {
         @DisplayName("sets status to active for new consumer info")
         void setsActiveStatus() {
             when(consumerService.addOrUpdate(any(Consumer.class))).thenReturn(gatewayConsumer);
+            when(consumerInfoRepository.findByConsumerName("test-group"))
+                .thenReturn(Optional.of(consumerInfoEntity));
             when(consumerMemberRepository.findByConsumerName("test-group"))
                 .thenReturn(Collections.emptyList());
 

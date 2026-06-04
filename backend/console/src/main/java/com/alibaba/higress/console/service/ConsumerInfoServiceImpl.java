@@ -14,7 +14,9 @@ package com.alibaba.higress.console.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
@@ -53,13 +55,29 @@ public class ConsumerInfoServiceImpl implements ConsumerInfoService {
     public List<ConsumerDetail> listConsumers() {
         PaginatedResult<Consumer> gatewayConsumers = consumerService.list(new CommonPageQuery());
         List<Consumer> consumers = gatewayConsumers.getData();
-        if (consumers == null) {
-            consumers = new ArrayList<>();
+        if (consumers == null || consumers.isEmpty()) {
+            return Collections.emptyList();
         }
+
+        // Batch load all console info and members to avoid N+1 queries
+        List<String> consumerNames =
+            consumers.stream().map(Consumer::getName).collect(Collectors.toList());
+
+        Map<String, ConsumerInfoEntity> infoMap = consumerInfoRepository
+            .findByConsumerNameIn(consumerNames)
+            .stream()
+            .collect(Collectors.toMap(ConsumerInfoEntity::getConsumerName, e -> e, (a, b) -> a));
+
+        Map<String, List<String>> memberMap = consumerMemberRepository
+            .findByConsumerNameIn(consumerNames)
+            .stream()
+            .collect(Collectors.groupingBy(ConsumerMemberEntity::getConsumerName,
+                Collectors.mapping(ConsumerMemberEntity::getUsername, Collectors.toList())));
 
         List<ConsumerDetail> result = new ArrayList<>(consumers.size());
         for (Consumer consumer : consumers) {
-            ConsumerDetail detail = buildConsumerDetail(consumer);
+            ConsumerDetail detail =
+                buildConsumerDetail(consumer.getName(), consumer.getCredentials(), infoMap, memberMap);
             result.add(detail);
         }
         return result;
@@ -75,7 +93,7 @@ public class ConsumerInfoServiceImpl implements ConsumerInfoService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public ConsumerDetail createConsumer(String name, List<Credential> credentials,
         String nameCn, String nameEn, String shortName, String description) {
         // 1. Create gateway consumer
@@ -101,7 +119,7 @@ public class ConsumerInfoServiceImpl implements ConsumerInfoService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public ConsumerDetail updateConsumer(String consumerName, List<Credential> credentials,
         String nameCn, String nameEn, String shortName, String description) {
         // 1. Update gateway consumer if credentials changed
@@ -129,7 +147,7 @@ public class ConsumerInfoServiceImpl implements ConsumerInfoService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void deleteConsumer(String consumerName) {
         // 1. Delete console consumer info + members
         consumerInfoRepository.findByConsumerName(consumerName)
@@ -150,7 +168,7 @@ public class ConsumerInfoServiceImpl implements ConsumerInfoService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void addMembers(String consumerName, List<String> usernames) {
         ensureConsumerExists(consumerName);
         LocalDateTime now = LocalDateTime.now();
@@ -183,14 +201,13 @@ public class ConsumerInfoServiceImpl implements ConsumerInfoService {
     }
 
     /**
-     * Build ConsumerDetail by merging gateway consumer data + console ConsumerInfo + members.
+     * Build ConsumerDetail for single-consumer operations (get, create, update).
      */
     private ConsumerDetail buildConsumerDetail(String consumerName, List<Credential> credentials) {
         ConsumerDetail.ConsumerDetailBuilder builder = ConsumerDetail.builder()
             .name(consumerName)
             .credentials(credentials);
 
-        // Query console management info
         consumerInfoRepository.findByConsumerName(consumerName).ifPresent(info -> {
             builder.nameCn(info.getNameCn())
                 .nameEn(info.getNameEn())
@@ -199,11 +216,34 @@ public class ConsumerInfoServiceImpl implements ConsumerInfoService {
                 .infoStatus(info.getStatus());
         });
 
-        // Query member list
         List<String> members = consumerMemberRepository.findByConsumerName(consumerName)
             .stream()
             .map(ConsumerMemberEntity::getUsername)
             .collect(Collectors.toList());
+        builder.members(members);
+
+        return builder.build();
+    }
+
+    /**
+     * Build ConsumerDetail using pre-loaded batch data (for list operations).
+     */
+    private ConsumerDetail buildConsumerDetail(String consumerName, List<Credential> credentials,
+        Map<String, ConsumerInfoEntity> infoMap, Map<String, List<String>> memberMap) {
+        ConsumerDetail.ConsumerDetailBuilder builder = ConsumerDetail.builder()
+            .name(consumerName)
+            .credentials(credentials);
+
+        ConsumerInfoEntity info = infoMap.get(consumerName);
+        if (info != null) {
+            builder.nameCn(info.getNameCn())
+                .nameEn(info.getNameEn())
+                .shortName(info.getShortName())
+                .description(info.getDescription())
+                .infoStatus(info.getStatus());
+        }
+
+        List<String> members = memberMap.getOrDefault(consumerName, Collections.emptyList());
         builder.members(members);
 
         return builder.build();

@@ -12,6 +12,7 @@
  */
 package com.alibaba.higress.console.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,5 +22,8 @@ import com.alibaba.higress.console.repository.entity.ConsumerInfoEntity;
 
 public interface ConsumerInfoRepository extends JpaRepository<ConsumerInfoEntity, Long> {
     Optional<ConsumerInfoEntity> findByConsumerName(String consumerName);
+
+    List<ConsumerInfoEntity> findByConsumerNameIn(Collection<String> consumerNames);
+
     List<ConsumerInfoEntity> findByStatus(String status);
 }

@@ -12,6 +12,7 @@
  */
 package com.alibaba.higress.console.repository;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,8 +21,14 @@ import com.alibaba.higress.console.repository.entity.ConsumerMemberEntity;
 
 public interface ConsumerMemberRepository extends JpaRepository<ConsumerMemberEntity, Long> {
     List<ConsumerMemberEntity> findByConsumerName(String consumerName);
+
+    List<ConsumerMemberEntity> findByConsumerNameIn(Collection<String> consumerNames);
+
     void deleteByConsumerName(String consumerName);
+
     void deleteByConsumerNameAndUsername(String consumerName, String username);
+
     boolean existsByConsumerNameAndUsername(String consumerName, String username);
+
     List<ConsumerMemberEntity> findByUsername(String username);
 }
