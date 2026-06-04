@@ -887,7 +887,14 @@
     "detail": "详情",
     "total": "共",
     "keyAuthOnlyTip": "目前仅支持 Key Auth 认证",
-    "authType": "认证方式"
+    "authType": "认证方式",
+    "updateSuccess": "更新成功",
+    "updateFailed": "更新失败",
+    "deleteFailed": "删除失败",
+    "addSuccess": "添加成功",
+    "addFailed": "添加失败",
+    "operateSuccess": "操作成功",
+    "operateFailed": "操作失败"
   },
   "mcp": {
     "common": {

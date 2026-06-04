@@ -887,7 +887,14 @@
     "detail": "Detail",
     "total": "Total",
     "keyAuthOnlyTip": "Currently only Key Auth is supported",
-    "authType": "Auth Type"
+    "authType": "Auth Type",
+    "updateSuccess": "Updated successfully",
+    "updateFailed": "Update failed",
+    "deleteFailed": "Delete failed",
+    "addSuccess": "Added successfully",
+    "addFailed": "Add failed",
+    "operateSuccess": "Operation successful",
+    "operateFailed": "Operation failed"
   },
   "mcp": {
     "common": {

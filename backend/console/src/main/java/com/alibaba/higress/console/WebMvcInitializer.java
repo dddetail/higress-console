@@ -32,7 +32,8 @@ import org.springframework.web.servlet.resource.ResourceResolverChain;
 @EnableWebMvc
 public class WebMvcInitializer implements WebMvcConfigurer {
 
-    private static final List<String> API_PATH_PREFIXES = Arrays.asList("/v1/", "/oauth2/");
+    private static final List<String> API_PATH_PREFIXES =
+        Arrays.asList("/v1/", "/oauth2/", "/session", "/dashboard", "/system", "/user", "/landing", "/healthz", "/grafana/");
 
     private static final String HOMEPAGE_PATH = "/index.html";
 

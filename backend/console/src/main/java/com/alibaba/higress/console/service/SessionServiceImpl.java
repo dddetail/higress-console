@@ -317,7 +317,7 @@ public class SessionServiceImpl implements SessionService {
 
     private String generateOauth2Token(User user) {
         AdminConfig config = getAdminConfig();
-        String rawToken = OAUTH2_TOKEN_PREFIX + user.getName() + TOKEN_PART_SEPARATOR
+        String rawToken = OAUTH2_TOKEN_PREFIX + TOKEN_PART_SEPARATOR + user.getName() + TOKEN_PART_SEPARATOR
             + String.valueOf(System.currentTimeMillis());
         try {
             return AesUtil.encrypt(config.getEncryptKey(), config.getEncryptIv(), rawToken);

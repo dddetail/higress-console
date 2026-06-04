@@ -133,7 +133,7 @@ const ChangePasswordForm: React.FC = () => {
         onCancel={relogin}
         footer={[
           <Button key="submit" type="primary" onClick={relogin}>
-            OK
+            {t('misc.confirm')}
           </Button>
         ]}
       >

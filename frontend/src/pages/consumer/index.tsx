@@ -360,9 +360,13 @@ const ConsumerList: React.FC = () => {
       >
         <Table
           loading={membersLoading}
-          dataSource={consumerMembers.map((u) => ({ username: u }))}
+          dataSource={consumerMembers.map((u) => {
+            const matchedUser = allUsers.find((user: any) => user.name === u);
+            return { username: u, displayName: matchedUser?.displayName || '-' };
+          })}
           columns={[
             { title: t('consumer.memberUsername'), dataIndex: 'username', key: 'username' },
+            { title: t('userManagement.displayName'), dataIndex: 'displayName', key: 'displayName' },
             {
               title: t('misc.actions'),
               key: 'action',
