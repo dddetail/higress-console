@@ -127,13 +127,13 @@ public class Oauth2Controller {
         if ("http".equals(scheme) && port != 80 || "https".equals(scheme) && port != 443) {
             sb.append(":").append(port);
         }
-        sb.append("/oauth2/callback/").append(providerKey);
+        sb.append("/api/oauth2/callback/").append(providerKey);
         return sb.toString();
     }
 
     private void sendSuccessRedirect(HttpServletResponse response) {
         try {
-            String target = StringUtils.isNotEmpty(redirectBaseUrl) ? redirectBaseUrl : "/";
+            String target = StringUtils.isNotEmpty(redirectBaseUrl) ? redirectBaseUrl + "/console/" : "/console/";
             response.sendRedirect(target);
         } catch (Exception e) {
             throw new BusinessException("Failed to redirect after login", e);
@@ -143,7 +143,7 @@ public class Oauth2Controller {
     private void redirectToLoginWithError(HttpServletResponse response, String error) {
         try {
             String encodedError = URLEncoder.encode(error, "UTF-8");
-            String loginPath = "/login?oauth_error=" + encodedError;
+            String loginPath = "/console/login?oauth_error=" + encodedError;
             String target = StringUtils.isNotEmpty(redirectBaseUrl)
                 ? redirectBaseUrl + loginPath : loginPath;
             response.sendRedirect(target);
