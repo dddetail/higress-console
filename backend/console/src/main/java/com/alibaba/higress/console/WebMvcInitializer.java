@@ -13,7 +13,6 @@
 package com.alibaba.higress.console;
 
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -23,7 +22,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
 import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 import org.springframework.web.servlet.resource.ResourceResolverChain;
@@ -32,37 +33,35 @@ import org.springframework.web.servlet.resource.ResourceResolverChain;
 @EnableWebMvc
 public class WebMvcInitializer implements WebMvcConfigurer {
 
-    private static final List<String> API_PATH_PREFIXES =
-        Arrays.asList("/v1/", "/oauth2/", "/session", "/dashboard", "/system", "/user", "/landing", "/healthz", "/grafana/");
-
     private static final String HOMEPAGE_PATH = "/index.html";
 
-    private static final List<String> STATIC_RESOURCE_DIR_PREFIXES =
-        Arrays.asList("/assets/", "/css/", "/js/", "/img/", "/images/", "/fonts/", "/static/");
+    @Override
+    public void configurePathMatch(PathMatchConfigurer configurer) {
+        configurer.addPathPrefix("/api", c ->
+            c.isAnnotationPresent(org.springframework.web.bind.annotation.RestController.class)
+        );
+    }
+
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        registry.addRedirectViewController("/", "/console/");
+    }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/*").addResourceLocations("classpath:/static/")
+        registry.addResourceHandler("/**").addResourceLocations("classpath:/static/")
             .setCacheControl(CacheControl.maxAge(Duration.ZERO).mustRevalidate()).setUseLastModified(true)
             .resourceChain(true).addResolver(new PathResourceResolver() {
                 @Override
                 protected Resource resolveResourceInternal(HttpServletRequest request, @NonNull String requestPath,
                     @NonNull List<? extends Resource> locations, @NonNull ResourceResolverChain chain) {
                     Resource resource = super.resolveResourceInternal(request, requestPath, locations, chain);
-                    if (resource == null && API_PATH_PREFIXES.stream().noneMatch(requestPath::startsWith)
-                        && !isStaticResourceRequest(requestPath)) {
-                        // Resource not found. Fallback to the homepage.
+                    if (resource == null && requestPath.startsWith("console")) {
+                        // Frontend SPA route fallback to index.html
                         resource = super.resolveResourceInternal(request, HOMEPAGE_PATH, locations, chain);
                     }
                     return resource;
                 }
             });
-    }
-
-    private static boolean isStaticResourceRequest(String requestPath) {
-        if (STATIC_RESOURCE_DIR_PREFIXES.stream().anyMatch(requestPath::startsWith)) {
-            return true;
-        }
-        return false;
     }
 }
