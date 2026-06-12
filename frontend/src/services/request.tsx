@@ -5,7 +5,7 @@ import { ErrorComp } from './exception';
 
 const request = axios.create({
   timeout: 5 * 1000,
-  baseURL: process.env.ICE_CORE_MODE === "development" ? "/api" : "",
+  baseURL: "/api",
   headers: {
     "Content-Type": "application/json",
   },
@@ -54,7 +54,10 @@ request.interceptors.response.use(
         // Unauthorized. Jump to the login page.
         Promise.reject(error);
         if (window.location.href.indexOf('/init') === -1 && window.location.href.indexOf('/login') === -1) {
-          window.location.href = `/login?redirect=${window.location.pathname}`;
+          // Strip /console prefix so redirect param is react-router compatible (without basename)
+          const pathname = window.location.pathname;
+          const redirectPath = pathname.startsWith('/console') ? pathname.slice('/console'.length) || '/' : pathname;
+          window.location.href = `/console/login?redirect=${encodeURIComponent(redirectPath)}`;
         }
         return;
       }
