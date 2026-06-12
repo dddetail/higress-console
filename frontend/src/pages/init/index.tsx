@@ -37,7 +37,7 @@ const Init: React.FC = () => {
       });
       message.success(t('init.initSuccess'));
       setTimeout(() => {
-        window.location.href = '/login';
+        window.location.href = '/console/login';
       }, 3000);
     } catch (error) {
       message.error(t('init.initFailed'));
