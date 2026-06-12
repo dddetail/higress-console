@@ -37,7 +37,7 @@ const Login: React.FC = () => {
     const error = urlParams.get('oauth_error');
     if (error) {
       setOauthError(decodeURIComponent(error));
-      window.history.replaceState({}, '', '/login');
+      window.history.replaceState({}, '', '/console/login');
     }
 
     // Load enabled SSO providers
@@ -80,8 +80,7 @@ const Login: React.FC = () => {
   }
 
   function handleSsoLogin(providerKey: string) {
-    const prefix = process.env.ICE_CORE_MODE === "development" ? "/api" : "";
-    window.location.href = `${prefix}/oauth2/authorization/${providerKey}`;
+    window.location.href = `/api/oauth2/authorization/${providerKey}`;
   }
 
   return (
