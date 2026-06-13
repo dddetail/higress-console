@@ -257,72 +257,48 @@ git commit -m "refactor: springdoc 路径匹配更新为 /api/**"
 
 **Files:**
 - Modify: `frontend/ice.config.mts`
+- Modify: `frontend/src/app.ts`
 
-- [ ] **Step 1: 添加 router.basename + 更新 proxy 配置**
+- [ ] **Step 1: 更新 ice.config.mts 的 proxy 配置**
 
-将 `ice.config.mts` 完整替换为：
+⚠️ **重要：** ICE.js 3.x 的 `ice.config.mts` **不支持** `router` 键（会报 `Config key 'router' is not supported`）。basename 必须配置在 `app.ts` 的 `defineAppConfig` 中。
+
+在 `ice.config.mts` 中只更新 proxy 配置，去掉 `pathRewrite`：
 
 ```ts
-import { defineConfig } from "@ice/app";
-import request from "@ice/plugin-request";
-import store from "@ice/plugin-store";
-import auth from "@ice/plugin-auth";
-import path from 'path';
-import CopyPlugin from 'copy-webpack-plugin';
-import { fileURLToPath } from 'url';
-
-// The project config, see https://v3.ice.work/docs/guide/basic/config
-export default defineConfig(() => ({
-  ssr: false,
-  ssg: false,
-  hash: "contenthash",
-  routes: {
-    defineRoutes: (route) => {
-      // route("*", "404.tsx");
-    },
-  },
-  router: {
-    basename: '/console',
-  },
   proxy: {
     "/api": {
       target: "http://localhost:8080",
       changeOrigin: true,
     },
   },
-  plugins: [
-    request(),
-    store(),
-    auth(),
-  ],
-  webpack: (config) => {
-    config.plugins = config.plugins || [];
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
-    config.plugins.push(
-      new CopyPlugin({
-        patterns: [
-          {
-            from: path.resolve(__dirname, 'node_modules/monaco-editor/min/vs'),
-            to: 'vs',
-          },
-        ],
-      }),
-    );
-    return config;
+```
+
+- [ ] **Step 2: 在 app.ts 的 defineAppConfig 中添加 basename**
+
+修改 `frontend/src/app.ts`：
+
+```ts
+// App config, see https://v3.ice.work/docs/guide/basic/app
+export default defineAppConfig(() => ({
+  router: {
+    basename: '/console',
   },
 }));
 ```
 
-关键变化：
-- **新增 `router.basename: '/console'`**：所有前端路由自动加 `/console` 前缀，路由定义文件无需改动
-- **proxy 去掉 `pathRewrite`**：后端控制器已通过 `configurePathMatch` 自带 `/api` 前缀，proxy 直接透传 `/api/xxx`
+框架通过 `getRouterBasename()` 读取 `appConfig.router.basename`（见 `@ice/app/esm/utils/getRouterBasename.js`）。所有前端路由自动加 `/console` 前缀。
 
-> **注意：** 如果 ICE.js 3.x 不支持在 `ice.config.mts` 中设置 `router.basename`，则改为在 `frontend/src/app.ts` 的 `defineAppConfig` 中设置：
-> ```ts
-> export default defineAppConfig(() => ({
->   router: { basename: '/console' },
-> }));
-> ```
+- [ ] **Step 3: Commit**
+
+```bash
+git add frontend/ice.config.mts frontend/src/app.ts
+git commit -m "fix: basename 配置移至 app.ts defineAppConfig（ice.config.mts 不支持 router 键）"
+```
+
+关键变化：
+- **新增 `router.basename: '/console'`（在 app.ts）**：所有前端路由自动加 `/console` 前缀，路由定义文件无需改动
+- **proxy 去掉 `pathRewrite`**：后端控制器已通过 `configurePathMatch` 自带 `/api` 前缀，proxy 直接透传 `/api/xxx`
 
 - [ ] **Step 2: Commit**
 
