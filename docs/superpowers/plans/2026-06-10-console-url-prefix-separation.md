@@ -532,7 +532,9 @@ git commit -m "refactor: init 页面跳转路径适配 /console 前缀"
 
 - [ ] **Step 1: 更新 readinessProbe 路径**
 
-将 `helm/templates/deployment.yaml` 第 103-106 行：
+> 注意：HealthzController 类级 `@RequestMapping("/healthz")` + 方法级 `@GetMapping("/ready")`，加 `/api` 前缀后唯一端点是 **`/api/healthz/ready`**。`/api/healthz`（不带 `/ready`）会 404。
+
+将 `helm/templates/deployment.yaml` 的 readinessProbe：
 ```yaml
           readinessProbe:
             httpGet:
@@ -543,7 +545,7 @@ git commit -m "refactor: init 页面跳转路径适配 /console 前缀"
 ```yaml
           readinessProbe:
             httpGet:
-              path: /api/healthz
+              path: /api/healthz/ready
               port: http
 ```
 
@@ -551,7 +553,7 @@ git commit -m "refactor: init 页面跳转路径适配 /console 前缀"
 
 ```bash
 git add helm/templates/deployment.yaml
-git commit -m "refactor: Helm 健康检查路径适配 /api 前缀"
+git commit -m "fix: Helm 健康检查路径改为 /api/healthz/ready（HealthzController 唯一端点）"
 ```
 
 ---

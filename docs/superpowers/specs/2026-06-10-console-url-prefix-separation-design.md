@@ -198,16 +198,15 @@ springdoc.pathsToMatch=/api/**
 
 ### 6.1 K8s 健康检查
 
-健康检查端点从 `/healthz` 变为 `/api/healthz`。需要更新 Helm chart 中的探针配置：
+健康检查端点从 `/healthz/ready` 变为 `/api/healthz/ready`（HealthzController 类级 `/healthz` + 方法级 `/ready`，configurePathMatch 加 `/api` 前缀）。需要更新 Helm chart 中的探针配置：
 
 ```yaml
-livenessProbe:
-  httpGet:
-    path: /api/healthz
 readinessProbe:
   httpGet:
-    path: /api/healthz
+    path: /api/healthz/ready
 ```
+
+> 注意：`/api/healthz`（不带 `/ready`）会 404，因为 HealthzController 没有 `/healthz` 根级 GET 映射。
 
 ### 6.2 OAuth2 提供者配置
 
