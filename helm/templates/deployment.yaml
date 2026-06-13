@@ -102,7 +102,7 @@ spec:
               protocol: TCP
           readinessProbe:
             httpGet:
-              path: /api/healthz
+              path: /api/healthz/ready
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
