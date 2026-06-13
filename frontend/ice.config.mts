@@ -16,9 +16,6 @@ export default defineConfig(() => ({
       // route("*", "404.tsx");
     },
   },
-  router: {
-    basename: '/console',
-  },
   proxy: {
     "/api": {
       target: "http://localhost:8080",
